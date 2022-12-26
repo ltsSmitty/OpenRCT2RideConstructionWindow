@@ -1,3 +1,4 @@
+
 import { TrackElementType } from "../utilities/trackElementType";
 import { debug } from "../utilities/logger";
 
@@ -14,7 +15,7 @@ export const computeBuildLocation = ({ initialLocation, buildDirection, trackEle
     const newX = x + xyAdjustment.x;
     const newY = y + xyAdjustment.y;
 
-    const directionAdjustment = getAdjustedDirection({ trackType: trackElementType, direction, buildDirection });
+    const directionAdjustment = getAdjustedDirection({ direction });
     const newDirection = directionAdjustment.direction;
 
     const newBuildLocation = { x: newX, y: newY, z: newZ, direction: newDirection };
@@ -135,7 +136,8 @@ const getAdjustedXYCoords = ({ trackType, direction }: {
  * @returns a Direction (not Direction8)
  */
 
-const getAdjustedDirection = ({ trackType, direction, buildDirection }: { trackType: TrackElementType; direction: Direction8; buildDirection: BuildDirection }): { direction: Direction } => {
+// const getAdjustedDirection = ({ trackType, direction, buildDirection }: { trackType: TrackElementType; direction: Direction8; buildDirection: BuildDirection }): { direction: Direction } => {
+const getAdjustedDirection = ({ direction }: { direction: Direction8 }): { direction: Direction } => {
     // todo do  more than just mod4 the direction.
     const newDirection = <Direction>(direction % 4);
     return { direction: newDirection };
