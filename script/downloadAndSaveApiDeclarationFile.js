@@ -1,11 +1,12 @@
-import { mkdir, writeFile } from 'fs/promises';
-import { join } from 'path';
-import { get as _get } from 'https';
+/* eslint-disable @typescript-eslint/no-var-requires */
+const fs = require('fs/promises');
+const path = require('path');
+const https = require('https');
 
 const request = {
     get: (url) =>
         new Promise((resolve, reject) => {
-            const req = _get(url, (res) => {
+            const req = https.get(url, (res) => {
                 let result = '';
 
                 res.on('error', reject);
@@ -29,6 +30,6 @@ const request = {
         'https://raw.githubusercontent.com/OpenRCT2/OpenRCT2/develop/distribution/openrct2.d.ts'
     );
 
-    await mkdir(join(process.cwd(), 'lib'), { recursive: true });
-    await writeFile(join(process.cwd(), 'lib', 'openrct2.d.ts'), apiDeclarationFileData);
+    await fs.mkdir(path.join(process.cwd(), 'lib'), { recursive: true });
+    await fs.writeFile(path.join(process.cwd(), 'lib', 'openrct2.d.ts'), apiDeclarationFileData);
 })();
