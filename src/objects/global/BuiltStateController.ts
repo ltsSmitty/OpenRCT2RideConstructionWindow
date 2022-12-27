@@ -27,13 +27,12 @@ const isFinishedBuildState = (buildState: BuildState): buildState is FinishedBui
 };
 
 /**
- * This class is responsible for keeping track of the state of the build process.
+ * This class is responsible for keeping track of the state of the build props.
  * There are 4 props that need values in order to build:
- * 1. rideType
- * 2. ride
+ * 1. ride
+ * 2. rideType
  * 3. trackElementType
  * 4. the build location
- *
  */
 export class BuildStateController {
 
@@ -70,9 +69,16 @@ export class BuildStateController {
     /**
      * The finished build state is the build state holds either a finished build state or null (representing a non-complete build).
      */
-    readonly finishedBuildState: Store<FinishedBuildState | null> = compute((this.rideType, this.ride, this.trackElementType, this.computedBuildLocation), () => {
-        return this.getFinishedBuildState();
-    });
+    readonly finishedBuildState: Store<FinishedBuildState | null> = compute(
+        this.rideType,
+        this.ride,
+        this.trackElementType,
+        // this.computedBuildLocation, () => {
+        this.computedBuildLocation, (rideType, ride, trackElementType, computedBuildLocation) => {
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+            console.log(`Computing finished build state with the given values: ${rideType}, ${ride}, ${trackElementType}, ${JSON.stringify(computedBuildLocation)}`);
+            return this.getFinishedBuildState();
+        });
 
     private getFinishedBuildState(): FinishedBuildState | null {
         const buildState = this.getBuildState();
@@ -85,16 +91,14 @@ export class BuildStateController {
     constructor(globalState: GlobalStateController) {
         this._globalState = globalState;
 
-        // this._globalState.buildDirection.subscribe(newBuildDirection => this.onBuildDirectionChange(newBuildDirection));
-        // this.rideType.subscribe(newRideType => this.onRideTypeChange(newRideType));
-        // this.ride.subscribe(newRide => this.onRideChange(newRide));
-        // this.trackElementType.subscribe(newTrackElementType => this.onTrackElementTypeChange(newTrackElementType));
-        // this.initialBuildLocation.subscribe(newInitialBuildLocation => this.onInitialBuildLocationChange(newInitialBuildLocation));
-        // this.computedBuildLocation.subscribe(newComputedBuildLocation => this.onComputedBuildLocationChange(newComputedBuildLocation));
-
-        this.computedBuildLocation = compute((this._globalState.buildDirection, this.initialBuildLocation, this.trackElementType), () => {
-            return this.computeBuildLocation();
-        });
+        // compute the computed location
+        this.computedBuildLocation = compute(
+            this._globalState.buildDirection,
+            this.initialBuildLocation,
+            this.trackElementType, () => {
+                debug(`computing computedBuildLocation`);
+                return this.computeBuildLocation();
+            });
     }
 
     public getBuildState(): BuildState {
@@ -111,16 +115,19 @@ export class BuildStateController {
         return buildState;
     }
 
+    /**
+     * This is called based on a subscription to buildDirection, initialBuildLocation, and trackElementType
+     * @returns the computed build location if all the required values are present, otherwise null
+     */
     private computeBuildLocation(): CoordsXYZD | null {
         const { buildDirection: buildDirectionStore } = this._globalState;
-        // need to get buildDirection, initialBuildLocation, trackElementType as values
 
         const buildDirection = buildDirectionStore.get();
         const initialLocation = this.initialBuildLocation.get();
         const trackElementType = this.trackElementType.get();
 
         if (buildDirection == null || initialLocation == null || trackElementType == null) {
-            debug("BuildStateController.computeBuildLocation: one of the required values is null");
+            // debug("BuildStateController.computeBuildLocation: one of the required values is null");
             return null;
         }
 
@@ -129,16 +136,11 @@ export class BuildStateController {
             initialLocation,
             trackElementType
         });
+        debug(`BuildStateController.computeBuildLocation: returning newBuildLocation: ${JSON.stringify(newBuildLocation)}`);
         return newBuildLocation;
     }
 }
 
-const buildStateController = new BuildStateController(new GlobalStateController);
-buildStateController.finishedBuildState.subscribe((finishedBuildState) => {
-    if (finishedBuildState != null) {
-        debug(`finishedBuildState: ${JSON.stringify(finishedBuildState)}`);
-    }
-});
 
 
 
