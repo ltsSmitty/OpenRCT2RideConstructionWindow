@@ -46,7 +46,7 @@ export const isSpecialButton = (button: BuildWindowButton): button is SpecialBut
     return button === "special";
 };
 
-export const isSelectionControlButton = (button: BuildWindowButton): button is ControlButton => {
+export const isControlButton = (button: BuildWindowButton): button is ControlButton => {
     return button === "demolish" ||
         button === "iterateNext" ||
         button === "select" ||
