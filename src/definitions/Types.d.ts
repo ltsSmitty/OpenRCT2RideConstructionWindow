@@ -1,3 +1,4 @@
+/* eslint-disable no-var */
 
 /** Whether pointed forward (next), in the standard direction cars get launched, or backward (previous) */
 type BuildDirection = "next" | "previous";
@@ -5,6 +6,29 @@ type BuildDirection = "next" | "previous";
 /** Whether to include segments a ride can validly build, or all the pieces that it can *technically* draw */
 type DrawableSegmentBuildRule = "enabled" | "extra"; // todo implement covered
 
+/**
+ * A generic TileElement type that exposes element, index and coords at once.
+ * Used extensively for finding specific tile elements (surface, footpath, track, etc.)
+ */
+type TileElementItem<T extends TileElement> = {
+    element: T,
+    index: number,
+    coords: CoordsXY
+};
+
+type Segment = {
+    location: CoordsXYZD;
+    ride: number; //
+    trackType: TrackElementType; // e.g. TrackElementType.LeftBankedDown25ToDown25
+    rideType: RideType;
+};
+
+/**
+ * A specific track-based TileELementItem to keep typing cleaner
+ */
+interface TrackElementItem extends TileElementItem<TrackElement> {
+    segment: Segment | null
+}
 
 /**
  * Button group types

@@ -1,7 +1,10 @@
+
 // import { getButtonsForElement } from './../buttons/ButtonMap';
-import { store, Store } from 'openrct2-flexui';
+import { store, Store, ElementVisibility } from 'openrct2-flexui';
 import { debug } from '~/src/utilities/logger';
 import * as assertButton from '../buttons/ButtonAssertions';
+import _ from 'lodash-es';
+
 // import { getButtonsForElement } from '../buttons/ButtonMap';
 
 type AllButtonsStores = Record<keyof AllButtons, Store<boolean>>;
@@ -46,33 +49,37 @@ const allButtonsEmpty: AllButtonsStores = {
     build: store(false),
 };
 
+const allButtonsVisibilityEmpty: Record<keyof AllButtons, Store<ElementVisibility>> = _.mapValues(allButtonsEmpty, () => store(<ElementVisibility>"visible"));
+
+
 interface IButtonStateController {
     /** Buttons/toggles which are actively toggled on and/or are one-time pressed. */
     readonly pressedButtons: AllButtonsStores;
     /** Keep track of which buttons are disabled (cannot be pressed). */
     readonly enabledButtons: AllButtonsStores
     /** Keep track of which buttons which are visible (cannot be pressed). */
-    readonly visibleButtons: AllButtonsStores;
+    readonly visibleButtons: typeof allButtonsVisibilityEmpty;
     /** Keep track of the pressed buttons which are used for determining which TrackElementTypes are valid */
     readonly buttonPressCombination: ButtonPressCombination;
 
     getButtonPressCombination(): ButtonPressCombination;
     getPressedButtons(): { [key in BuildWindowButton]: boolean };
     getEnabledButtons(): { [key in BuildWindowButton]: boolean };
-    getVisibleButtons(): { [key in BuildWindowButton]: boolean };
-    getButtonStatus(button: BuildWindowButton): { pressed: boolean, enabled: boolean, visible: boolean };
+    getVisibleButtons(): { [key in BuildWindowButton]: ElementVisibility };
+    getButtonStatus(button: BuildWindowButton): { pressed: boolean, enabled: boolean, visible: ElementVisibility };
 }
 
 export class ButtonStateController implements IButtonStateController {
     readonly pressedButtons: AllButtonsStores = { ...allButtonsEmpty };
-    readonly visibleButtons: AllButtonsStores = { ...allButtonsEmpty };
     readonly enabledButtons: AllButtonsStores = { ...allButtonsEmpty };
-    readonly buttonPressCombination: ButtonPressCombination = {};
+    readonly visibleButtons = { ...allButtonsVisibilityEmpty };
+    readonly buttonPressCombination: ButtonPressCombination = { controls: {} };
+
 
     /**
      * Get the state of visiblity, pressed, and enabled for the given button
      */
-    getButtonStatus(button: BuildWindowButton): { pressed: boolean, enabled: boolean, visible: boolean } {
+    getButtonStatus(button: BuildWindowButton): { pressed: boolean, enabled: boolean, visible: ElementVisibility } {
         return {
             pressed: this.pressedButtons[button].get(),
             enabled: this.enabledButtons[button].get(),
@@ -106,15 +113,15 @@ export class ButtonStateController implements IButtonStateController {
         return enabledButtons;
     }
 
-    getVisibleButtons(): { [key in BuildWindowButton]: boolean } {
-        const visibleButtons = {} as { [key in BuildWindowButton]: boolean }
+    getVisibleButtons(): { [key in BuildWindowButton]: ElementVisibility } {
+        const visibleButtons = {} as { [key in BuildWindowButton]: ElementVisibility }
         for (const button in this.visibleButtons) {
             const val = this.visibleButtons[<keyof AllButtonsStores>button].get();
             if (val) {
                 visibleButtons[<keyof AllButtonsStores>button] = val;
             }
             else
-                visibleButtons[<keyof AllButtonsStores>button] = false;
+                visibleButtons[<keyof AllButtonsStores>button] = "none";
         }
         return visibleButtons;
     }
