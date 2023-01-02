@@ -99,10 +99,10 @@ interface IButtonStateController {
     readonly enabledButtons: AllButtonsStores
     /** Keep track of which buttons which are visible (cannot be pressed). */
     readonly visibleButtons: typeof allButtonsVisibilityEmpty;
-    /** Keep track of the pressed buttons which are used for determining which TrackElementTypes are valid */
-    readonly buttonPressCombination: ButtonPressCombination;
 
-    getButtonPressCombination(): ButtonPressCombination;
+
+    /** Keep track of the pressed buttons which are used for determining which TrackElementTypes are valid */
+    getButtonPressCombinationStores(): ButtonPressCombination;
     getPressedButtons(): { [key in BuildWindowButton]: boolean };
     getEnabledButtons(): { [key in BuildWindowButton]: boolean };
     getVisibleButtons(): { [key in BuildWindowButton]: ElementVisibility };
@@ -122,9 +122,9 @@ export class ButtonStateController implements IButtonStateController {
     readonly pressedButtons: AllButtonsStores = { ...allButtonsEmpty };
     readonly enabledButtons: AllButtonsStores = { ...allButtonsEmpty };
     readonly visibleButtons = { ...allButtonsVisibilityEmpty };
-    readonly buttonPressCombination = { ...buttonPressCombinationEmpty };
+    private readonly buttonPressCombination = { ...buttonPressCombinationEmpty };
 
-    getButtonPressCombination(): ButtonPressCombination {
+    getButtonPressCombinationStores(): ButtonPressCombination {
         return this.buttonPressCombination;
     }
 

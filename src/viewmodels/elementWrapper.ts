@@ -27,7 +27,7 @@ export class ElementWrapper {
             onClick: () => {
                 if (onClick) return onClick(); //override default behaviour if another is provided
 
-                return onButtonChange({ buttonType, isPressed: false, globalState: this._globalState });
+                return onButtonChange({ buttonType, pressState: "oneTime", globalState: this._globalState });
             },
             ...rest
         });
@@ -43,7 +43,7 @@ export class ElementWrapper {
             onChange: (isPressed?) => {
                 if (onChange) return onChange(isPressed); //override default behaviour
 
-                return onButtonChange({ buttonType, isPressed, globalState: this._globalState });
+                return onButtonChange({ buttonType, pressState: isPressed ? "pressed" : "notPressed", globalState: this._globalState });
             },
             isPressed: this._globalState.buttonState.pressedButtons[buttonType],
             ...rest
