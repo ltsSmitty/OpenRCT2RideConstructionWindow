@@ -97,12 +97,4 @@ type ControlButtons = {
     [key in ControlButton]?: boolean;
 };
 
-type ButtonPressCombination = {
-    curve?: CurveButton;
-    pitch?: PitchButton;
-    bank?: BankButton;
-    special?: SpecialButton;
-    misc?: MiscButton;
-    detail?: DetailButton[];
-    controls: ControlButtons
-};
+type ButtonPressOption = "pressed" | "notPressed" | "oneTime";

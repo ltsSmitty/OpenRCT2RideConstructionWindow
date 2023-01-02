@@ -1,13 +1,32 @@
-
 // import { getButtonsForElement } from './../buttons/ButtonMap';
 import { store, Store, ElementVisibility } from 'openrct2-flexui';
-import { debug } from '~/src/utilities/logger';
-import * as assertButton from '../buttons/ButtonAssertions';
+// import { debug } from '~/src/utilities/logger';
+// import * as assertButton from '../buttons/ButtonAssertions';
 import _ from 'lodash-es';
 
 // import { getButtonsForElement } from '../buttons/ButtonMap';
 
 type AllButtonsStores = Record<keyof AllButtons, Store<boolean>>;
+
+type ButtonPressCombination = {
+    curve: Store<CurveButton | null>,
+    bank: Store<BankButton | null>,
+    pitch: Store<PitchButton | null>,
+    detail: {
+        chainLift: Store<boolean>,
+        covered: Store<boolean>,
+    },
+    misc: Store<MiscButton | null>,
+    special: Store<SpecialButton | null>,
+    controls: {
+        demolish: Store<boolean>,
+        iterateNext: Store<boolean>,
+        select: Store<boolean>,
+        iteratePrevious: Store<boolean>,
+        simulate: Store<boolean>,
+        build: Store<boolean>,
+    }
+};
 
 // instantiate an empty allButtons object
 const allButtonsEmpty: AllButtonsStores = {
@@ -52,6 +71,27 @@ const allButtonsEmpty: AllButtonsStores = {
 const allButtonsVisibilityEmpty: Record<keyof AllButtons, Store<ElementVisibility>> = _.mapValues(allButtonsEmpty, () => store(<ElementVisibility>"visible"));
 
 
+// instantiate an empty ButtonPressCombination object with all null store values
+const buttonPressCombinationEmpty: ButtonPressCombination = {
+    curve: store<CurveButton | null>(null),
+    bank: store<BankButton | null>(null),
+    pitch: store<PitchButton | null>(null),
+    detail: {
+        chainLift: store<boolean>(false),
+        covered: store<boolean>(false),
+    },
+    misc: store<MiscButton | null>(null),
+    special: store<SpecialButton | null>(null),
+    controls: {
+        demolish: store<boolean>(false),
+        iterateNext: store<boolean>(false),
+        select: store<boolean>(false),
+        iteratePrevious: store<boolean>(false),
+        simulate: store<boolean>(false),
+        build: store<boolean>(false),
+    }
+};
+
 interface IButtonStateController {
     /** Buttons/toggles which are actively toggled on and/or are one-time pressed. */
     readonly pressedButtons: AllButtonsStores;
@@ -67,14 +107,26 @@ interface IButtonStateController {
     getEnabledButtons(): { [key in BuildWindowButton]: boolean };
     getVisibleButtons(): { [key in BuildWindowButton]: ElementVisibility };
     getButtonStatus(button: BuildWindowButton): { pressed: boolean, enabled: boolean, visible: ElementVisibility };
+
+    updateCurve({ button, pressed }: { button: CurveButton, pressed: ButtonPressOption }): void;
+    updateBank({ button, pressed }: { button: BankButton, pressed: ButtonPressOption }): void;
+    updatePitch({ button, pressed }: { button: PitchButton, pressed: ButtonPressOption }): void;
+    updateSpecial({ button, pressed }: { button: SpecialButton, pressed: ButtonPressOption }): void;
+    updateMisc({ button, pressed }: { button: MiscButton, pressed: ButtonPressOption }): void;
+    updateDetail({ button, pressed }: { button: DetailButton, pressed: ButtonPressOption }): void;
+    updateControl({ button, pressed }: { button: ControlButton, pressed: ButtonPressOption }): void;
+
 }
 
 export class ButtonStateController implements IButtonStateController {
     readonly pressedButtons: AllButtonsStores = { ...allButtonsEmpty };
     readonly enabledButtons: AllButtonsStores = { ...allButtonsEmpty };
     readonly visibleButtons = { ...allButtonsVisibilityEmpty };
-    readonly buttonPressCombination: ButtonPressCombination = { controls: {} };
+    readonly buttonPressCombination = { ...buttonPressCombinationEmpty };
 
+    getButtonPressCombination(): ButtonPressCombination {
+        return this.buttonPressCombination;
+    }
 
     /**
      * Get the state of visiblity, pressed, and enabled for the given button
@@ -88,7 +140,7 @@ export class ButtonStateController implements IButtonStateController {
     }
 
     getPressedButtons(): { [key in BuildWindowButton]: boolean } {
-        const pressedButtons = {} as { [key in BuildWindowButton]: boolean }
+        const pressedButtons = {} as { [key in BuildWindowButton]: boolean };
         for (const button in this.pressedButtons) {
             const val = this.pressedButtons[<keyof AllButtonsStores>button].get();
             if (val) {
@@ -101,7 +153,7 @@ export class ButtonStateController implements IButtonStateController {
     }
 
     getEnabledButtons(): { [key in BuildWindowButton]: boolean } {
-        const enabledButtons = {} as { [key in BuildWindowButton]: boolean }
+        const enabledButtons = {} as { [key in BuildWindowButton]: boolean };
         for (const button in this.enabledButtons) {
             const val = this.enabledButtons[<keyof AllButtonsStores>button].get();
             if (val) {
@@ -114,7 +166,7 @@ export class ButtonStateController implements IButtonStateController {
     }
 
     getVisibleButtons(): { [key in BuildWindowButton]: ElementVisibility } {
-        const visibleButtons = {} as { [key in BuildWindowButton]: ElementVisibility }
+        const visibleButtons = {} as { [key in BuildWindowButton]: ElementVisibility };
         for (const button in this.visibleButtons) {
             const val = this.visibleButtons[<keyof AllButtonsStores>button].get();
             if (val) {
@@ -126,81 +178,80 @@ export class ButtonStateController implements IButtonStateController {
         return visibleButtons;
     }
 
-    getButtonPressCombination(): ButtonPressCombination {
+    updateCurve = ({ button, pressed }: { button: CurveButton, pressed: ButtonPressOption }): void => {
+        // get the old pressed curve button
+        const oldPressed = this.buttonPressCombination.curve.get();
+        if (!oldPressed) return;
+        // set the old pressed button to not be pressed
+        this.pressedButtons[oldPressed].set(false);
 
-    }
+        // set the new pressed button to be pressed
+        this.pressedButtons[button].set(pressed == "pressed" ? true : false);
+        this.buttonPressCombination.curve.set(button);
+    };
 
-    // could be to get the ones that are pressed, the ones that are visible, etc.
-    getTruthyValueButtonsFromStores(buttons: AllButtonsStores): ButtonPressCombination {
-        // need to get all the true values from the  buttons' stores, and then sort them by their type, and if there are too many return the 0th index and log an error
-        const trueButtons = {
-            curve: <CurveButton[]>[],
-            bank: <BankButton[]>[],
-            pitch: <PitchButton[]>[],
-            special: <SpecialButton[]>[],
-            detail: <DetailButton[]>[],
-            misc: <MiscButton[]>[],
-            controls: <ControlButton[]>[],
-        };
+    updateBank = ({ button, pressed }: { button: BankButton, pressed: ButtonPressOption }): void => {
+        const oldPressed = this.buttonPressCombination.bank.get();
+        if (!oldPressed) return;
+        this.pressedButtons[oldPressed].set(false);
+        this.pressedButtons[button].set(pressed == "pressed" ? true : false);
+        this.buttonPressCombination.bank.set(button);
+    };
 
-        for (const buttonType in buttons) {
-            const buttonCategory = getButtonCategory(<BuildWindowButton>buttonType);
-            if (buttonCategory === undefined) continue;
-            const val = buttons[<BuildWindowButton>buttonType].get();
-            if (val) {
-                trueButtons[buttonCategory].push({ [key: buttonCategory]: val });
-            }
-        }
+    updatePitch = ({ button, pressed }: { button: PitchButton, pressed: ButtonPressOption }): void => {
+        const oldPressed = this.buttonPressCombination.pitch.get();
+        if (!oldPressed) return;
+        this.pressedButtons[oldPressed].set(false);
+        this.pressedButtons[button].set(pressed == "pressed" ? true : false);
+        this.buttonPressCombination.pitch.set(button);
+    };
 
+    updateSpecial = ({ button, pressed }: { button: SpecialButton, pressed: ButtonPressOption }): void => {
+        const oldPressed = this.buttonPressCombination.special.get();
+        if (!oldPressed) return;
+        this.pressedButtons[oldPressed].set(false);
+        this.pressedButtons[button].set(pressed == "pressed" ? true : false);
+        this.buttonPressCombination.special.set(button);
+    };
 
-        // switch (buttonCategory) {
-        //     case "controls":
-        //         trueButtons.control.push(<ControlButton>buttonType); continue;
-        //     case "curve":
-        //         trueButtons.curve.push(<CurveButton>buttonType); continue;
-        //     case "bank":
-        //         trueButtons.bank.push(<BankButton>buttonType); continue;
-        //     case "pitch":
-        //         trueButtons.pitch.push(<PitchButton>buttonType); continue;
-        //     case "special":
-        //         trueButtons.special.push(<SpecialButton>buttonType); continue;
-        //     case "detail":
-        //         trueButtons.detail.push(<DetailButton>buttonType); continue;
-        //     case "misc":
-        //         trueButtons.misc.push(<MiscButton>buttonType); continue;
-        //     default:
-        //         debug(`Button category for ${buttonType} is not a valid category.`);
-        // }
-    }
+    updateMisc = ({ button, pressed }: { button: MiscButton, pressed: ButtonPressOption }): void => {
+        const oldPressed = this.buttonPressCombination.misc.get();
+        if (!oldPressed) return;
+        this.pressedButtons[oldPressed].set(false);
+        this.pressedButtons[button].set(pressed == "pressed" ? true : false);
+        this.buttonPressCombination.misc.set(button);
+    };
 
-    updateCurveButton(button: CurveButton, pressed: boolean) {
-        const oldPressed = this.buttonPressCombination.curve//this.pressedButtons[button].get();
-        this.pressedButtons[button].set(pressed);
-    }
+    updateDetail = ({ button, pressed }: { button: DetailButton, pressed: ButtonPressOption }): void => {
+        this.buttonPressCombination.detail[button].set(pressed == "pressed" ? true : false);
+    };
 
-
+    updateControl = ({ button, pressed }: { button: ControlButton, pressed: ButtonPressOption }): void => {
+        this.buttonPressCombination.controls[button].set(pressed == "pressed" ? true : false);
+    };
 }
-const getButtonCategory = (button: BuildWindowButton): keyof ButtonPressCombination | undefined => {
-    if (assertButton.isCurveButton(button)) {
-        return "curve";
-    }
-    if (assertButton.isBankButton(button)) {
-        return "bank";
-    }
-    if (assertButton.isPitchButton(button)) {
-        return "pitch";
-    }
-    if (assertButton.isSpecialButton(button)) {
-        return "special";
-    }
-    if (assertButton.isDetailButton(button)) {
-        return "detail";
-    }
-    if (assertButton.isMiscButton(button)) {
-        return "misc";
-    }
-    if (assertButton.isControlButton(button)) {
-        return "controls";
-    }
-    return undefined;
-};
+
+// const getButtonCategory = (button: BuildWindowButton): keyof ButtonPressCombination | undefined => {
+//     if (assertButton.isCurveButton(button)) {
+//         return "curve";
+//     }
+//     if (assertButton.isBankButton(button)) {
+//         return "bank";
+//     }
+//     if (assertButton.isPitchButton(button)) {
+//         return "pitch";
+//     }
+//     if (assertButton.isSpecialButton(button)) {
+//         return "special";
+//     }
+//     if (assertButton.isDetailButton(button)) {
+//         return "detail";
+//     }
+//     if (assertButton.isMiscButton(button)) {
+//         return "misc";
+//     }
+//     if (assertButton.isControlButton(button)) {
+//         return "controls";
+//     }
+//     return undefined;
+// };
