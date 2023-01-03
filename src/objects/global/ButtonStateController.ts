@@ -108,13 +108,13 @@ interface IButtonStateController {
     getVisibleButtons(): { [key in BuildWindowButton]: ElementVisibility };
     getButtonStatus(button: BuildWindowButton): { pressed: boolean, enabled: boolean, visible: ElementVisibility };
 
-    updateCurve({ button, pressed }: { button: CurveButton, pressed: ButtonPressOption }): void;
-    updateBank({ button, pressed }: { button: BankButton, pressed: ButtonPressOption }): void;
-    updatePitch({ button, pressed }: { button: PitchButton, pressed: ButtonPressOption }): void;
-    updateSpecial({ button, pressed }: { button: SpecialButton, pressed: ButtonPressOption }): void;
-    updateMisc({ button, pressed }: { button: MiscButton, pressed: ButtonPressOption }): void;
-    updateDetail({ button, pressed }: { button: DetailButton, pressed: ButtonPressOption }): void;
-    updateControl({ button, pressed }: { button: ControlButton, pressed: ButtonPressOption }): void;
+    updateCurve({ button, isPressed }: { button: CurveButton, isPressed: ButtonPressOption }): void;
+    updateBank({ button, isPressed }: { button: BankButton, isPressed: ButtonPressOption }): void;
+    updatePitch({ button, isPressed }: { button: PitchButton, isPressed: ButtonPressOption }): void;
+    updateSpecial({ button, isPressed }: { button: SpecialButton, isPressed: ButtonPressOption }): void;
+    updateMisc({ button, isPressed }: { button: MiscButton, isPressed: ButtonPressOption }): void;
+    updateDetail({ button, isPressed }: { button: DetailButton, isPressed: ButtonPressOption }): void;
+    updateControl({ button, isPressed }: { button: ControlButton, isPressed: ButtonPressOption }): void;
 
 }
 
@@ -178,7 +178,7 @@ export class ButtonStateController implements IButtonStateController {
         return visibleButtons;
     }
 
-    updateCurve = ({ button, pressed }: { button: CurveButton, pressed: ButtonPressOption }): void => {
+    updateCurve = ({ button, isPressed }: { button: CurveButton, isPressed: ButtonPressOption }): void => {
         // get the old pressed curve button
         const oldPressed = this.buttonPressCombination.curve.get();
         if (!oldPressed) return;
@@ -186,48 +186,48 @@ export class ButtonStateController implements IButtonStateController {
         this.pressedButtons[oldPressed].set(false);
 
         // set the new pressed button to be pressed
-        this.pressedButtons[button].set(pressed == "pressed" ? true : false);
+        this.pressedButtons[button].set(isPressed == "pressed" ? true : false);
         this.buttonPressCombination.curve.set(button);
     };
 
-    updateBank = ({ button, pressed }: { button: BankButton, pressed: ButtonPressOption }): void => {
+    updateBank = ({ button, isPressed }: { button: BankButton, isPressed: ButtonPressOption }): void => {
         const oldPressed = this.buttonPressCombination.bank.get();
         if (!oldPressed) return;
         this.pressedButtons[oldPressed].set(false);
-        this.pressedButtons[button].set(pressed == "pressed" ? true : false);
+        this.pressedButtons[button].set(isPressed == "pressed" ? true : false);
         this.buttonPressCombination.bank.set(button);
     };
 
-    updatePitch = ({ button, pressed }: { button: PitchButton, pressed: ButtonPressOption }): void => {
+    updatePitch = ({ button, isPressed }: { button: PitchButton, isPressed: ButtonPressOption }): void => {
         const oldPressed = this.buttonPressCombination.pitch.get();
         if (!oldPressed) return;
         this.pressedButtons[oldPressed].set(false);
-        this.pressedButtons[button].set(pressed == "pressed" ? true : false);
+        this.pressedButtons[button].set(isPressed == "pressed" ? true : false);
         this.buttonPressCombination.pitch.set(button);
     };
 
-    updateSpecial = ({ button, pressed }: { button: SpecialButton, pressed: ButtonPressOption }): void => {
+    updateSpecial = ({ button, isPressed }: { button: SpecialButton, isPressed: ButtonPressOption }): void => {
         const oldPressed = this.buttonPressCombination.special.get();
         if (!oldPressed) return;
         this.pressedButtons[oldPressed].set(false);
-        this.pressedButtons[button].set(pressed == "pressed" ? true : false);
+        this.pressedButtons[button].set(isPressed == "pressed" ? true : false);
         this.buttonPressCombination.special.set(button);
     };
 
-    updateMisc = ({ button, pressed }: { button: MiscButton, pressed: ButtonPressOption }): void => {
+    updateMisc = ({ button, isPressed }: { button: MiscButton, isPressed: ButtonPressOption }): void => {
         const oldPressed = this.buttonPressCombination.misc.get();
         if (!oldPressed) return;
         this.pressedButtons[oldPressed].set(false);
-        this.pressedButtons[button].set(pressed == "pressed" ? true : false);
+        this.pressedButtons[button].set(isPressed == "pressed" ? true : false);
         this.buttonPressCombination.misc.set(button);
     };
 
-    updateDetail = ({ button, pressed }: { button: DetailButton, pressed: ButtonPressOption }): void => {
-        this.buttonPressCombination.detail[button].set(pressed == "pressed" ? true : false);
+    updateDetail = ({ button, isPressed }: { button: DetailButton, isPressed: ButtonPressOption }): void => {
+        this.buttonPressCombination.detail[button].set(isPressed == "pressed" ? true : false);
     };
 
-    updateControl = ({ button, pressed }: { button: ControlButton, pressed: ButtonPressOption }): void => {
-        this.buttonPressCombination.controls[button].set(pressed == "pressed" ? true : false);
+    updateControl = ({ button, isPressed }: { button: ControlButton, isPressed: ButtonPressOption }): void => {
+        this.buttonPressCombination.controls[button].set(isPressed == "pressed" ? true : false);
     };
 }
 
