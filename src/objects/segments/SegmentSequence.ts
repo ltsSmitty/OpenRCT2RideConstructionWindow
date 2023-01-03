@@ -4,12 +4,24 @@ import { debug } from "~/src/utilities/logger";
 import * as finder from "~/src/services/finder";
 import { TrackElementType } from "~/src/utilities/trackElementType";
 import _ from "lodash-es";
+import { Store, store } from "openrct2-flexui";
 
 export class SegmentSequence {
     private _initialSegment: Segment | null = null;
     private _segments: Segment[] = [];
     private _selectedSegmentIndex = -1;
     isCompleteCiruit = false;
+    public nextBuildLocation: Store<CoordsXYZD | null> = store<CoordsXYZD | null>(null);
+    public previousBuildLocation: Store<CoordsXYZD | null> = store<CoordsXYZD | null>(null);
+
+    getNextBuildLocation(): CoordsXYZD | null {
+        // get the last value in segments, then get a TI there and get nextLocation()
+        const finalSegment = this._segments[this._segments.length - 1];
+        if (!finalSegment) return null;
+        const tiAtEnd = finder.getTIAtSegment(finalSegment);
+        if (!tiAtEnd) return null;
+        return tiAtEnd.nextPosition;
+    }
 
     constructor(segment?: Segment) {
         this._initialSegment = segment ?? null;
@@ -32,14 +44,34 @@ export class SegmentSequence {
         return this._segments[index] ?? null;
     }
 
-    createSequence(): void {
+    hasNextSegment(): boolean {
+        return this._segments[this._selectedSegmentIndex + 1] ? true : false;
+    }
+
+    hasPreviousSegment(): boolean {
+        return this._segments[this._selectedSegmentIndex - 1] ? true : false;
+    }
+
+    next(): boolean {
+        if (!this.hasNextSegment()) return false;
+        this._selectedSegmentIndex++;
+        return true;
+    }
+
+    previous(): boolean {
+        if (!this.hasPreviousSegment()) return false;
+        this._selectedSegmentIndex--;
+        return true;
+    }
+
+    private createSequence(): void {
         if (this._initialSegment == null) {
             debug("SegmentSequence.createSequence: no initial segment");
             return;
         }
         this._segments = [this._initialSegment];
 
-        // loop through with a TI
+        // iterate through backwards with a TI
         const reverseIterator = finder.getTIAtSegment(this._initialSegment);
         if (reverseIterator == null) {
             debug("Initial segment invalid: no TI found");
@@ -93,8 +125,26 @@ export class SegmentSequence {
         }
     }
 
+    private updateSequence(): void {
+        // do the same process as createSequence, making sure there's no duplicates,
+        // this is to be called after building a new segment, to add it onto this sequence.
+        debug(`ERROR: update sequence not implemented.`, true);
+    }
+
     getSegmentIndex(segment: Segment): number {
         return _.findIndex(this._segments, s => _.isEqual(s.location, segment.location));
+    }
+
+    /**
+     * After construcrting a new segment, add it to the sequence
+     */
+    addNewlyBuiltSegment(): void {
+        // check if the segment's location is
+        const lastSegment = this._segments[this._segments.length - 1];
+        const TIAtLastSegment = finder.getTIAtSegment(lastSegment);
+        if (TIAtLastSegment?.next()) {
+            this.updateSequence();
+        }
     }
 }
 
@@ -105,9 +155,9 @@ export class SegmentSequencer {
         return this._segmentSequence;
     }
 
-    createSequenceFrom(segment: Segment): this {
+    createSequenceFrom(segment: Segment): SegmentSequence {
         this._segmentSequence = new SegmentSequence(segment);
-        return this;
+        return this.segmentSequence;
     }
 
     // when a new segment has been selected in the UI, 1. get a ti, 2. move backwards to a stationStart TET (or an end), then move forward until an end or the same stationStart TET is found
