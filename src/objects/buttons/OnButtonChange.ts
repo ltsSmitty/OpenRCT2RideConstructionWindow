@@ -1,40 +1,37 @@
-import { DetailButton } from './../buttonActions/buttonTypes';
-import { ButtonSelectorModel } from '../../viewmodels/buttonSelectorModel';
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+import { GlobalStateController } from './../global/GlobalStateController';
+import * as assertButton from "./ButtonAssertions";
+import buttonActions from './buttonActions';
 
-import iterateSelection from '../buttonActions/iterateSelectionAction';
-import simulateRide from '../buttonActions/simulateRideAction';
-import selectSegment from '../buttonActions/selectSegmentAction';
 import { debug } from '../../utilities/logger';
-import buildSegment from '../buttonActions/buildSegmentAction';
-import { BuildWindowButton } from '../buttonActions/buttonTypes';
-import * as button from '../buttonActions/buttonTypeChecks';
-import { ButtonsActivelyPressed } from '../buttonToTrackElementMap';
-import { GlobalStateController } from '../global/GlobalStateController';
-
+import { ButtonsActivelyPressed } from 'src/objects/buttons/ButtonMap';
 
 export const onButtonChange = (options: {
     buttonType: BuildWindowButton,
-    isPressed: boolean,
+    pressState: ButtonPressOption,
     globalState: GlobalStateController,
 }): void => {
-    const { buttonType, isPressed, segmentModel: model, buttonSelectorModel: buttonModel } = options;
+    const { buttonType, pressState, globalState } = options;
+    // debug(`the global state is ${globalState.buildDirection.get()}`);
+
+
 
     let modelResponse;
 
     // If curve button was updated
-    if (button.isCurveButton(buttonType)) {
+    if (assertButton.isCurveButton(buttonType)) {
         buttonModel.selectedCurve.set(null);
         modelResponse = buttonModel.selectedCurve.set(buttonType);
     }
 
     // If bank button was updated
-    if (button.isBankButton(buttonType)) {
+    if (assertButton.isBankButton(buttonType)) {
         buttonModel.selectedBank.set(null);
         modelResponse = buttonModel.selectedBank.set(buttonType);
     }
 
     // If slope button was updated
-    if (button.isPitchButton(buttonType)) {
+    if (assertButton.isPitchButton(buttonType)) {
         buttonModel.selectedPitch.set(null);
         modelResponse = buttonModel.selectedPitch.set(buttonType);
     }

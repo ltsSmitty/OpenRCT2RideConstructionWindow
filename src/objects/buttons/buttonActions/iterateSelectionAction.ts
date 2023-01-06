@@ -1,10 +1,10 @@
-import { debug } from "../../utilities/logger";
-import { SegmentModel } from "../../viewmodels/segmentModel";
+import { debug } from "src/utilities/logger";
+import { GlobalStateController } from "../../global/GlobalStateController";
 
-const iterateSelection = (direction: "next" | "previous", model: SegmentModel): boolean => {
-    model.buildDirection.set(direction);
+const iterateSelection = (direction: "next" | "previous", globalState: GlobalStateController): boolean => {
+    globalState.buildDirection.set(direction);
     debug(`Moving toward ${direction}`);
-    const actionResponse = model.moveToFollowingSegment();
+    const actionResponse = globalState.segmentModel.segmentState.iterateSelectionInDirection(direction);
     return actionResponse;
 }
 

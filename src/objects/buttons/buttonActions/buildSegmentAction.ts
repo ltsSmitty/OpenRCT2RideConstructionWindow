@@ -1,6 +1,3 @@
-import { debug } from "../../utilities/logger";
-import { SegmentModel } from "../../viewmodels/segmentModel";
-
 const buildSegment = (model: SegmentModel): void => {
     debug(`\nConstructing segment.\n`);
     model.build("real");

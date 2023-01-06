@@ -5,7 +5,7 @@ import { debug } from "../../utilities/logger";
 import { TrackElementType } from "../../utilities/trackElementType";
 import { ButtonSelectorModel } from "../../viewmodels/buttonSelectorModel";
 
-import * as button from '../buttonActions/buttonTypeChecks';
+import * as button from '../buttonTypeChecks';
 
 export const shouldThisBeDisabled = (options:
     {

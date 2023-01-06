@@ -8,7 +8,7 @@ import selectSegment from '../buttonActions/selectSegmentAction';
 import { debug } from '../../utilities/logger';
 import buildSegment from '../buttonActions/buildSegmentAction';
 import { BuildWindowButton } from '../buttonActions/buttonTypes';
-import * as button from '../buttonActions/buttonTypeChecks';
+import * as button from '../buttonTypeChecks';
 import { ButtonsActivelyPressed } from '../buttonToTrackElementMap';
 
 

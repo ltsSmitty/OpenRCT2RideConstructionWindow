@@ -1,21 +1,19 @@
+import { GlobalStateController } from './../objects/global/GlobalStateController';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { compute, dropdown, button, groupbox, horizontal, listview, window } from "openrct2-flexui";
+import { compute, dropdown, groupbox, horizontal, listview, window, WindowTemplate } from "openrct2-flexui";
 import { ElementWrapper } from '../viewmodels/elementWrapper';
 import { isDevelopment, pluginVersion } from "../environment";
 import { TrackElementType } from "../utilities/trackElementType";
-import { debug } from "../utilities/logger";
-import { SegmentModel } from '../viewmodels/segmentModel';
-import { ButtonSelectorModel } from '../viewmodels/buttonSelectorModel';
-import selectSegment from '../services/buttonActions/selectSegmentAction';
-import { customImageFor } from '../objects/customButtonSprites';
-import { RideType } from "../utilities/rideType";
+// import { debug } from "../utilities/logger";
+import buttonActions from '../objects/buttons/buttonActions';
+import { customImageFor } from "../objects/customSprites/customButtonSprites";
 
 
-const buttonSize = 15;
+// const buttonSize = 15;
 const directionButtonHeight = 25;
 const buttonWidthSmall = 25;
-const buttonWidthMedium = 25;
+// const buttonWidthMedium = 25;
 // const buttonWidthLarge = 18
 const directionButtonWidth = 25;
 const buttonRowHeight = 30;
@@ -31,10 +29,14 @@ if (isDevelopment) {
     title += " [DEBUG]";
 }
 
-export const trackIteratorWindow = (segmentModel: SegmentModel, elementWrapper: ElementWrapper, buttonModel: ButtonSelectorModel) => {
-    const model = segmentModel;
-    const element = elementWrapper;
-    const trackSelector = model.trackTypeSelector;
+export const trackIteratorWindow = (globalState: GlobalStateController): WindowTemplate => {
+    // get all main state variable accessible.
+    const { buildDirection, segmentModel: model, buttonState } = globalState;
+    const { segmentState } = model;
+    const { selectedSegment } = segmentState;
+
+    // create the element wrapper
+    const element = new ElementWrapper(globalState);
 
     return window({
         title,
@@ -45,13 +47,13 @@ export const trackIteratorWindow = (segmentModel: SegmentModel, elementWrapper: 
             // clean up potential issues in case the window crashed or something
             // model.open()
             // if there's nothing already, selected, open the picker tool
-            if (model.selectedSegment.get() == null) {
+            if (selectedSegment.get() == null) {
                 // todo actually just force toggle the select toggle
-                selectSegment(model, buttonModel, true);
+                buttonActions.selectSegment(globalState, true);
             }
         },
         // onUpdate: () => model.update(),
-        onClose: () => model.close(),
+        // onClose: () => model.close(),
         content: [
             // turn banking and steepness
             groupbox({
@@ -320,8 +322,7 @@ export const trackIteratorWindow = (segmentModel: SegmentModel, elementWrapper: 
                                 width: directionButtonWidth,
                                 height: directionButtonHeight,
                                 tooltip: "Use the picker to select a track segment by clicking it",
-                                isPressed: compute(buttonModel
-                                    .isPicking, (isPicking) => isPicking),
+                                isPressed: compute(buttonState.pressedButtons.select, (isPicking) => isPicking),
                                 image: 29402, // SPR_G2_EYEDROPPER
                             }),
                             element.button({
@@ -343,9 +344,9 @@ export const trackIteratorWindow = (segmentModel: SegmentModel, elementWrapper: 
             }),
             // choose which segment from the selected tile
             dropdown({
-                items: compute(model.trackElementsOnSelectedTile, (elements) => elements.map(e => `Ride: ${e.element.ride}, height: ${e.element.baseHeight}, i: ${TrackElementType[e.segment?.get().trackType || 0]}`)),
-                onChange: (selectedIndex) => { model.selectedSegment.set(model.trackElementsOnSelectedTile.get()[selectedIndex].segment); },
-                selectedIndex: compute(model.selectedSegment, segment => {
+                items: compute(model.trackElementsOnSelectedTile, (elements) => elements.map(e => `Ride: ${e.element.ride}, height: ${e.element.baseHeight}, i: ${TrackElementType[<TrackElementType>e.segment?.trackType || 0]}`)),
+                onChange: (selectedIndex) => { segmentState.updateSegmentSequence(model.trackElementsOnSelectedTile.get()[selectedIndex].segment); },
+                selectedIndex: compute(segmentState.selectedSegment, segment => {
                     const potentialIndexOf = model.trackElementsOnSelectedTile.get().map(tei => tei.segment).indexOf(segment);
                     return (potentialIndexOf === -1 ? 0 : potentialIndexOf);
                 })
@@ -353,36 +354,33 @@ export const trackIteratorWindow = (segmentModel: SegmentModel, elementWrapper: 
             // display stats for the selected segment
             listview({
                 height: 100,
-                items: compute(buttonModel.selectedCurve, buttonModel.selectedBank, buttonModel.selectedPitch, (curve, bank, pitch) => {
+                items: compute(
+                    buttonState.getButtonPressCombinationStores().curve,
+                    buttonState.getButtonPressCombinationStores().curve,
+                    buttonState.getButtonPressCombinationStores().curve, (curve, bank, pitch) => {
 
-                    let x, y, z, direction;
-                    if (model.selectedBuild.get()?.location) {
-                        x = model.selectedBuild.get().location?.x;
-                        y = model.selectedBuild.get()?.location?.y;
-                        z = model.selectedBuild.get()?.location?.z;
-                        direction = model.selectedBuild.get()?.location?.direction
-                    }
+                        const initialBuildLocation = segmentState.getBuildLocation({ direction: buildDirection.get() });
+                        const locationString = initialBuildLocation ? `${initialBuildLocation.x}, ${initialBuildLocation.y}, ${initialBuildLocation.z}; ${initialBuildLocation.direction}` : "No location";
+                        return [
+                            `Curve: ${curve ?? "none"}`,
+                            `Bank: ${bank ?? "none"}`,
+                            `Pitch: ${pitch ?? "none"}`,
+                            `${locationString}`,
+                        ];
 
-                    return [
-                        `Curve: ${curve}`,
-                        `Bank: ${bank}`,
-                        `Pitch: ${pitch}`,
-                        `SelectedLocation: ${x}, ${y}, ${z}; ${direction}`
-                    ]
+                        // if (!segment) return ["No segment selected"];
 
-                    // if (!segment) return ["No segment selected"];
-
-                    // const segInfo = segment.get();
-                    // return [
-                    // 	`Ride: ${segInfo.ride}`,
-                    // 	`Ride type: ${segInfo.rideType}`,
-                    // 	`Track element type:  ${getTrackElementTypeName(segInfo.trackType)}`,
-                    // 	`Location: ${segInfo.location.x}, ${segInfo.location.y}, ${segInfo.location.z}; ${segInfo.location.direction}`,
-                    // 	``,
-                    // 	`Next: ${segment.nextLocation()?.x}, ${segment.nextLocation()?.y}, ${segment.nextLocation()?.z}; ${segment.nextLocation()?.direction}`,
-                    // 	`Previous: ${segment.previousLocation()?.x}, ${segment.previousLocation()?.y}, ${segment.previousLocation()?.z}; ${segment.previousLocation()?.direction}`,
-                    // ];
-                })
+                        // const segInfo = segment.get();
+                        // return [
+                        // 	`Ride: ${segInfo.ride}`,
+                        // 	`Ride type: ${segInfo.rideType}`,
+                        // 	`Track element type:  ${getTrackElementTypeName(segInfo.trackType)}`,
+                        // 	`Location: ${segInfo.location.x}, ${segInfo.location.y}, ${segInfo.location.z}; ${segInfo.location.direction}`,
+                        // 	``,
+                        // 	`Next: ${segment.nextLocation()?.x}, ${segment.nextLocation()?.y}, ${segment.nextLocation()?.z}; ${segment.nextLocation()?.direction}`,
+                        // 	`Previous: ${segment.previousLocation()?.x}, ${segment.previousLocation()?.y}, ${segment.previousLocation()?.z}; ${segment.previousLocation()?.direction}`,
+                        // ];
+                    })
             }),
             // // choose a new buildable segment
             // dropdown({
@@ -419,57 +417,59 @@ export const trackIteratorWindow = (segmentModel: SegmentModel, elementWrapper: 
             // ride favorite selection section
 
             // currently selected ride
-            horizontal({
-                content: [
-                    dropdown({
-                        items: compute(buttonModel.favoriteRides, (favorites) => {
-                            const selectedRideType = favorites[0]?.rideType;
-                            if (!selectedRideType) return ["No ride selected"];
-                            return [`${selectedRideType}-${RideType[selectedRideType || -1]}`];
-                        }),
-                        disabled: true
-                    }),
-                    button({
-                        width: 15,
-                        height: 15,
-                        isPressed: compute(buttonModel.selectedFavoriteIndex, (index) => {
-                            return ((index == 0) ? true : false);
-                        }),
-                        onClick: () => {
-                            buttonModel.selectedFavoriteIndex.set(0);
-                        }
-                    }),
-                ]
-            }),
-            // first favorite
-            horizontal({
-                content: [
-                    dropdown({
-                        items: compute(buttonModel.favoriteRides, (favorites) => {
-                            return buttonModel.allAvailableTrackedRides.get().map(ride => `${ride}-${RideType[ride || -1]}`);
-                        }),
-                        disabled: compute(buttonModel.favoriteRides, (favorites) => {
-                            // it should be disabled if nothing is selected
-                            return (!favorites[0]?.rideType) ? true : false;
-                        }),
-                        onChange: (index) => {
-                            const allTrackRides = buttonModel.allAvailableTrackedRides.get();
-                            const newRideType = allTrackRides[index];
-                            buttonModel.updateRideTypeFavorite(newRideType, 1);
-                        }
-                    }),
-                    button({
-                        width: 15,
-                        height: 15,
-                        isPressed: compute(buttonModel.selectedFavoriteIndex, (index) => {
-                            return ((index == 1) ? true : false);
-                        }),
-                        onClick: () => {
-                            buttonModel.selectedFavoriteIndex.set(1);
-                        }
-                    }),
-                ]
-            }),
+            // horizontal({
+            //     content: [
+            //         dropdown({
+            //             items: compute(buttonModel.favoriteRides, (favorites) => {
+            //                 const selectedRideType = favorites[0]?.rideType;
+            //                 if (!selectedRideType) return ["No ride selected"];
+            //                 return [`${selectedRideType}-${RideType[selectedRideType || -1]}`];
+            //             }),
+            //             disabled: true
+            //         }),
+            //         button({
+            //             width: 15,
+            //             height: 15,
+            //             isPressed: compute(buttonModel.selectedFavoriteIndex, (index) => {
+            //                 return ((index == 0) ? true : false);
+            //             }),
+            //             onClick: () => {
+            //                 buttonModel.selectedFavoriteIndex.set(0);
+            //             }
+            //         }),
+            //     ]
+            // }),
+            // // first favorite
+            // horizontal({
+            //     content: [
+            //         dropdown({
+            //             items: compute(buttonModel.favoriteRides, (favorites) => {
+            //                 return buttonModel.allAvailableTrackedRides.get().map(ride => `${ride}-${RideType[ride || -1]}`);
+            //             }),
+            //             disabled: compute(buttonModel.favoriteRides, (favorites) => {
+            //                 // it should be disabled if nothing is selected
+            //                 return (!favorites[0]?.rideType) ? true : false;
+            //             }),
+            //             onChange: (index) => {
+            //                 const allTrackRides = buttonModel.allAvailableTrackedRides.get();
+            //                 const newRideType = allTrackRides[index];
+            //                 buttonModel.updateRideTypeFavorite(newRideType, 1);
+            //             }
+            //         }),
+            //         button({
+            //             width: 15,
+            //             height: 15,
+            //             isPressed: compute(buttonModel.selectedFavoriteIndex, (index) => {
+            //                 return ((index == 1) ? true : false);
+            //             }),
+            //             onClick: () => {
+            //                 buttonModel.selectedFavoriteIndex.set(1);
+            //             }
+            //         }),
+            //     ]
+            // }),
+
+            // todo not sure if this is working, don't uncomment
             // second favorite
             // horizontal({
             // 	content: [
@@ -506,4 +506,4 @@ export const trackIteratorWindow = (segmentModel: SegmentModel, elementWrapper: 
     });
 
 
-}
+};
