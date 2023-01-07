@@ -1,6 +1,6 @@
 
 import { GlobalStateController } from '../objects/global/GlobalStateController';
-import { BuildStateController } from './../objects/global/BuiltStateController';
+import { BuildStateController } from '../objects/global/BuildStateController';
 // import { debug } from '../utilities/logger';
 
 const globalState = new GlobalStateController();
