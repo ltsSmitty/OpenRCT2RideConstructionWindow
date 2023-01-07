@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 // import { getButtonsForElement } from './../buttons/ButtonMap';
 import { store, Store, ElementVisibility } from 'openrct2-flexui';
 // import { debug } from '~/src/utilities/logger';
 // import * as assertButton from '../buttons/ButtonAssertions';
 import _ from 'lodash-es';
+import { debug } from '~/src/utilities/logger';
 
 // import { getButtonsForElement } from '../buttons/ButtonMap';
 
@@ -181,10 +183,11 @@ export class ButtonStateController implements IButtonStateController {
     updateCurve = ({ button, isPressed }: { button: CurveButton, isPressed: ButtonPressOption }): void => {
         // get the old pressed curve button
         const oldPressed = this.buttonPressCombination.curve.get();
-        if (!oldPressed) return;
-        // set the old pressed button to not be pressed
-        this.pressedButtons[oldPressed].set(false);
-
+        console.log(`oldPressed: ${oldPressed}`);
+        if (oldPressed) {
+            // set the old pressed button to not be pressed
+            this.pressedButtons[oldPressed].set(false);
+        }
         // set the new pressed button to be pressed
         this.pressedButtons[button].set(isPressed == "pressed" ? true : false);
         this.buttonPressCombination.curve.set(button);
@@ -192,32 +195,38 @@ export class ButtonStateController implements IButtonStateController {
 
     updateBank = ({ button, isPressed }: { button: BankButton, isPressed: ButtonPressOption }): void => {
         const oldPressed = this.buttonPressCombination.bank.get();
-        if (!oldPressed) return;
-        this.pressedButtons[oldPressed].set(false);
+        debug(`oldPressed: ${oldPressed}`);
+        if (oldPressed) {
+            // set the old pressed button to not be pressed
+            this.pressedButtons[oldPressed].set(false);
+        }
         this.pressedButtons[button].set(isPressed == "pressed" ? true : false);
         this.buttonPressCombination.bank.set(button);
     };
 
     updatePitch = ({ button, isPressed }: { button: PitchButton, isPressed: ButtonPressOption }): void => {
         const oldPressed = this.buttonPressCombination.pitch.get();
-        if (!oldPressed) return;
-        this.pressedButtons[oldPressed].set(false);
+        if (oldPressed) {
+            this.pressedButtons[oldPressed].set(false);
+        }
         this.pressedButtons[button].set(isPressed == "pressed" ? true : false);
         this.buttonPressCombination.pitch.set(button);
     };
 
     updateSpecial = ({ button, isPressed }: { button: SpecialButton, isPressed: ButtonPressOption }): void => {
         const oldPressed = this.buttonPressCombination.special.get();
-        if (!oldPressed) return;
-        this.pressedButtons[oldPressed].set(false);
+        if (oldPressed) {
+            this.pressedButtons[oldPressed].set(false);
+        }
         this.pressedButtons[button].set(isPressed == "pressed" ? true : false);
         this.buttonPressCombination.special.set(button);
     };
 
     updateMisc = ({ button, isPressed }: { button: MiscButton, isPressed: ButtonPressOption }): void => {
         const oldPressed = this.buttonPressCombination.misc.get();
-        if (!oldPressed) return;
-        this.pressedButtons[oldPressed].set(false);
+        if (oldPressed) {
+            this.pressedButtons[oldPressed].set(false);
+        }
         this.pressedButtons[button].set(isPressed == "pressed" ? true : false);
         this.buttonPressCombination.misc.set(button);
     };
@@ -230,28 +239,3 @@ export class ButtonStateController implements IButtonStateController {
         this.buttonPressCombination.controls[button].set(isPressed == "pressed" ? true : false);
     };
 }
-
-// const getButtonCategory = (button: BuildWindowButton): keyof ButtonPressCombination | undefined => {
-//     if (assertButton.isCurveButton(button)) {
-//         return "curve";
-//     }
-//     if (assertButton.isBankButton(button)) {
-//         return "bank";
-//     }
-//     if (assertButton.isPitchButton(button)) {
-//         return "pitch";
-//     }
-//     if (assertButton.isSpecialButton(button)) {
-//         return "special";
-//     }
-//     if (assertButton.isDetailButton(button)) {
-//         return "detail";
-//     }
-//     if (assertButton.isMiscButton(button)) {
-//         return "misc";
-//     }
-//     if (assertButton.isControlButton(button)) {
-//         return "controls";
-//     }
-//     return undefined;
-// };
