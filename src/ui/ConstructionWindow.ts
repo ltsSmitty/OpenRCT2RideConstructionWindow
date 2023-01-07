@@ -356,8 +356,8 @@ export const trackIteratorWindow = (globalState: GlobalStateController): WindowT
                 height: 100,
                 items: compute(
                     buttonState.getButtonPressCombinationStores().curve,
-                    buttonState.getButtonPressCombinationStores().curve,
-                    buttonState.getButtonPressCombinationStores().curve, (curve, bank, pitch) => {
+                    buttonState.getButtonPressCombinationStores().bank,
+                    buttonState.getButtonPressCombinationStores().pitch, (curve, bank, pitch) => {
 
                         const initialBuildLocation = segmentState.getBuildLocation({ direction: buildDirection.get() });
                         const locationString = initialBuildLocation ? `${initialBuildLocation.x}, ${initialBuildLocation.y}, ${initialBuildLocation.z}; ${initialBuildLocation.direction}` : "No location";

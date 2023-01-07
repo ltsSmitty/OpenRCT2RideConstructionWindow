@@ -242,10 +242,10 @@ export const getSpecificTrackElement = (ride: number, coords: CoordsXYZD): Track
         }
 
         if (chosenTrack.length > 1) {
-
-            debug(`There are multiple different overlapping elements at this tile with the same z and direction – ${chosenTrack.map(track => TrackElementType[track.element.trackType])}. Now comparing the x and y. FYI, Was looking for an element matched the coords:
-            ${JSON.stringify(coords)}`);
-            debug(`the occupied Quadrants of the elements is ${chosenTrack.map(track => track.element.occupiedQuadrants)}`);
+            debug(`Multiple elements match z & direction. Comparing x & y to filter.`);
+            // debug(`There are multiple different overlapping elements at this tile with the same z and direction – ${chosenTrack.map(track => TrackElementType[track.element.trackType])}. Now comparing the x and y. FYI, Was looking for an element matched the coords:
+            // ${JSON.stringify(coords)}`);
+            // debug(`the occupied Quadrants of the elements is ${chosenTrack.map(track => track.element.occupiedQuadrants)}`);
 
             const matchingAllCoords = chosenTrack.filter((t, index) => {
                 const actualX = t.segment?.location.x;
@@ -260,7 +260,9 @@ export const getSpecificTrackElement = (ride: number, coords: CoordsXYZD): Track
                 return false;
             });
             chosenTrack = matchingAllCoords;
-            debug(`After comparison, there are ${chosenTrack.length} elements that match all coords. Returning only the first one.`);
+            chosenTrack.length > 1
+                ? debug(`After comparison, there are ${chosenTrack.length} elements that match all coords. Returning the first one.`)
+                : debug(`After comparison, there is only one element that matches all coords. Returning it.`);
         }
         return chosenTrack[0];
     }
@@ -285,10 +287,10 @@ export const getTIAtSegment = ({ segment, ride, location }: { segment?: Segment 
 
     let thisRide: number;
     let thisLocation: CoordsXYZD;
-
+    // debug(`Getting Ti at segment. Segment is ${JSON.stringify(segment)} and ride is ${ride} and location is ${JSON.stringify(location)}`);
 
     if (segment) {
-        debug(`Getting TI at segment ${JSON.stringify(segment)}.`);
+        // debug(`Getting TI at segment ${JSON.stringify(segment)}.`);
         thisRide = segment.ride;
         thisLocation = segment.location;
     }
@@ -298,12 +300,12 @@ export const getTIAtSegment = ({ segment, ride, location }: { segment?: Segment 
             thisLocation = location;
         }
         else {
-            debug(`Error: No segment or ride & location provided to getTIAtSegment.`);
+            debug(`finder.getTIAtSegment: No segment or ride & location provided to getTIAtSegment. Returning null`);
             return null;
         }
 
 
-    debug(`Getting specific track element.`);
+    // debug(`Getting specific track element.`);
     const thisSegmentIndex = getSpecificTrackElement(thisRide, thisLocation)?.index; // needed for iterator
     if (!thisSegmentIndex) {
         debug(`There was an issue getting the specific track element to get next segment options.`);
@@ -315,7 +317,7 @@ export const getTIAtSegment = ({ segment, ride, location }: { segment?: Segment 
         debug(`There was an issue creating the track iterator to get next segment options.`);
         return null;
     }
-    debug(`New TI is created at position (${newTI.position.x}, ${newTI.position.y}, ${newTI.position.z}) dir ${newTI.position.direction}.`);
+    // debug(`New TI is created at position (${newTI.position.x}, ${newTI.position.y}, ${newTI.position.z}) dir ${newTI.position.direction}.`);
     return newTI;
 };
 

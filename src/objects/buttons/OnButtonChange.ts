@@ -4,7 +4,7 @@ import * as assertButton from "./ButtonAssertions";
 import buttonActions from './buttonActions';
 
 import { debug } from '../../utilities/logger';
-import { ButtonsActivelyPressed } from 'src/objects/buttons/ButtonMap';
+// import { ButtonsActivelyPressed } from 'src/objects/buttons/ButtonMap';
 
 export const onButtonChange = (options: {
     buttonType: BuildWindowButton,
@@ -13,27 +13,21 @@ export const onButtonChange = (options: {
 }): void => {
     const { buttonType, pressState, globalState } = options;
     // debug(`the global state is ${globalState.buildDirection.get()}`);
-
-
-
-    let modelResponse;
+    const { buttonState, segmentModel, buildState } = globalState;
 
     // If curve button was updated
     if (assertButton.isCurveButton(buttonType)) {
-        buttonModel.selectedCurve.set(null);
-        modelResponse = buttonModel.selectedCurve.set(buttonType);
+        buttonState.updateCurve({ button: buttonType, isPressed: pressState });
     }
 
     // If bank button was updated
     if (assertButton.isBankButton(buttonType)) {
-        buttonModel.selectedBank.set(null);
-        modelResponse = buttonModel.selectedBank.set(buttonType);
+        buttonState.updateBank({ button: buttonType, isPressed: pressState });
     }
 
     // If slope button was updated
     if (assertButton.isPitchButton(buttonType)) {
-        buttonModel.selectedPitch.set(null);
-        modelResponse = buttonModel.selectedPitch.set(buttonType);
+        buttonState.updatePitch({ button: buttonType, isPressed: pressState });
     }
 
     switch (buttonType) {
@@ -41,26 +35,26 @@ export const onButtonChange = (options: {
         case "iterateNext":
         case "iteratePrevious": {
             const direction = buttonType === "iterateNext" ? "next" : "previous";
-            modelResponse = iterateSelection(direction, model);
+            segmentModel.segmentState.iterateSelectionInDirection(direction);
             break;
         }
 
         // action: start simulation
         case "simulate": {
-            debug(`isPressed: ${isPressed}`);
-            modelResponse = simulateRide(model, isPressed);
+            debug(`pressState: ${pressState}`);
+            buttonActions.simulateRide(segmentModel.segmentState, pressState === "pressed" ? true : false);
             break;
         }
 
         // action: select segment
         case "select": {
-            modelResponse = selectSegment(model, buttonModel, isPressed);
+            buttonActions.selectSegment(globalState, pressState === "pressed" ? true : false);
             break;
         }
 
         // action: build selectedBuild
         case "build": {
-            modelResponse = buildSegment(model);
+            // modelResponse = buildSegment(model);
             break;
         }
 
@@ -77,51 +71,55 @@ export const onButtonChange = (options: {
             break;
         }
         case "boosters": {
-            modelResponse = model.updateSelectedBuild("trackType", 100);
+            buildState.trackElementType.set(100); // "Booster" = 100,
             break;
         }
         case "camera": {
-            modelResponse = model.updateSelectedBuild("trackType", 114); //  "OnRidePhoto" = 114,
+            buildState.trackElementType.set(114); //  "OnRidePhoto" = 114,
             break;
         }
         case "brakes": {
-            modelResponse = model.updateSelectedBuild("trackType", 99); //      "Brakes" = 99,
+            buildState.trackElementType.set(99); //      "Brakes" = 99,
             break;
         }
         case "blockBrakes": {
-            modelResponse = model.updateSelectedBuild("trackType", 216); //   "BlockBrakes" = 216,
+            buildState.trackElementType.set(216); //   "BlockBrakes" = 216,
             break;
         }
     }
     debug(`What pieces could be built given the currently pressed buttons?`);
 
-    const pitchButton = buttonModel.selectedPitch.get();
-    const bankButton = buttonModel.selectedBank.get();
-    const curveButton = buttonModel.selectedCurve.get();
-    const specialButton = buttonModel.selectedSpecial.get();
-    const miscButton = buttonModel.selectedMisc.get();
-    const detailButtons = buttonModel.selectedDetails.get();
+    // const pitchButton = buttonModel.selectedPitch.get();
+    // const bankButton = buttonModel.selectedBank.get();
+    // const curveButton = buttonModel.selectedCurve.get();
+    // const specialButton = buttonModel.selectedSpecial.get();
+    // const miscButton = buttonModel.selectedMisc.get();
+    // const detailButtons = buttonModel.selectedDetails.get();
 
-    // todo also compare whether the button is enabled before saying that it's active.
-    const pitchButtonActive = (pitchButton !== null ? pitchButton : undefined);
-    const bankButtonActive = (bankButton !== null ? bankButton : undefined);
-    const curveButtonActive = (curveButton !== null ? curveButton : undefined);
-    const specialButtonActive = (specialButton !== null ? specialButton : undefined);
-    const miscButtonActive = (miscButton !== null ? miscButton : undefined);
-    const detailButtonsActive = (detailButtons !== null ? detailButtons : [] as DetailButton[]);
+    // // todo also compare whether the button is enabled before saying that it's active.
+    // const pitchButtonActive = (pitchButton !== null ? pitchButton : undefined);
+    // const bankButtonActive = (bankButton !== null ? bankButton : undefined);
+    // const curveButtonActive = (curveButton !== null ? curveButton : undefined);
+    // const specialButtonActive = (specialButton !== null ? specialButton : undefined);
+    // const miscButtonActive = (miscButton !== null ? miscButton : undefined);
+    // const detailButtonsActive = (detailButtons !== null ? detailButtons : [] as DetailButton[]);
 
 
-    const selectedElements: ButtonsActivelyPressed = {
-        curve: curveButtonActive,
-        bank: bankButtonActive,
-        pitch: pitchButtonActive,
-        special: specialButtonActive,
-        misc: miscButtonActive,
-        detail: detailButtonsActive,
-    };
+    // const selectedElements: ButtonsActivelyPressed = {
+    //     curve: curveButtonActive,
+    //     bank: bankButtonActive,
+    //     pitch: pitchButtonActive,
+    //     special: specialButtonActive,
+    //     misc: miscButtonActive,
+    //     detail: detailButtonsActive,
+    // };
 
-    model.trackTypeSelector.updateButtonsPushed(selectedElements);
+    // todo this seems important and is missing
+    // model.trackTypeSelector.updateButtonsPushed(selectedElements);
     // model.buildableTrackByButtons.set(newBuildableTrackTypes);
-    model.debugButtonChange({ buttonType, isPressed, modelResponse });
+
+    // todo i think this could maybe move into the button model, or make it more robust here
+    // model.debugButtonChange({ buttonType, pressState, modelResponse });
+
 
 };
