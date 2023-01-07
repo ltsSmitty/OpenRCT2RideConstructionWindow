@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 
 import { Segment } from "./Segment";
 import { debug } from "~/src/utilities/logger";
@@ -6,6 +7,7 @@ import { TrackElementType } from "~/src/utilities/trackElementType";
 import _ from "lodash-es";
 import { arrayStore, store, Store, ArrayStore, compute } from "openrct2-flexui";
 import { GlobalStateController } from "../global/GlobalStateController";
+import createSegmentSequence from "~/src/services/createSegmentSequence";
 
 /** Keep track of the selected segment, the sequence it's in, and whether or not it's a complete circuit. */
 class SegmentState {
@@ -22,80 +24,24 @@ class SegmentState {
     /**
      * The currently selected segment, dependant on the sequence and the selected index
      */
-    readonly selectedSegment: Store<Segment | null> = compute(this.segmentSequence, this.selectedSegmentIndex, (sequence, index) => getSelectedSegmentFromIndex(sequence, index));
+    readonly selectedSegment = compute(this.segmentSequence, this.selectedSegmentIndex, (sequence, index) => {
+        const newSequence = getSelectedSegmentFromIndex(sequence, index);
+        debug(`Selected segment updated to ${newSequence?.trackType ? TrackElementType[newSequence.trackType] : `null`}`);
+        return newSequence;
+    });
 
     /**
      *Whether the sequence of segments is a complete circuit
      */
     readonly isCompleteCircuit: Store<boolean> = compute(this.segmentSequence, (sequence) => checkIsCompleteCircuit(sequence));
 
-    /**
-    * Get a sequence of segments which are iterable from the initial segment. The sequence will link together segments before and after the selected segment.
-    */
-    private createSegmentSequence(initialSegment: Segment | null): Segment[] {
-        if (initialSegment == null) {
-            debug("Initial segment invalid: null");
-            return [];
-        }
-
-        const segments = [initialSegment];
-
-        // iterate through backwards with a TI
-        // get the TI for iterating
-        const reverseIterator = finder.getTIAtSegment({ segment: initialSegment });
-        if (reverseIterator == null) {
-            debug("Initial segment invalid: no TI found");
-            return [];
-        }
-
-        // get a separate iterator to move forward
-        const forwardIterator = { ...reverseIterator };
-
-        // Loop backwards until we find a begin station or an end
-        while (reverseIterator.previousPosition) {
-            reverseIterator.previous();
-            const newSegment: Segment = new Segment({
-                location: reverseIterator.position,
-                ride: initialSegment.ride,
-                trackType: reverseIterator.segment?.type ?? 0,
-                rideType: finder.getTrackElementFromSegment({ ride: initialSegment.ride, location: reverseIterator.position, trackType: -1, rideType: -1 })?.element.rideType ?? -1
-            });
-            segments.unshift(newSegment);
-
-            if (newSegment.trackType == TrackElementType.BeginStation) {
-                break;
-            }
-        }
-        // set the selected index to the original one we chose
-        // hopefuly this isn't out of bounds
-        // this sets the selected segment to this as well due to the subscription
-        this.selectedSegmentIndex.set(segments.length - 1);
-
-        // Loop forwards until we find the same beginStation or an end
-        while (forwardIterator.nextPosition) {
-            forwardIterator.next();
-            const newSegment: Segment = new Segment({
-                location: forwardIterator.position,
-                ride: initialSegment.ride,
-                trackType: forwardIterator.segment?.type ?? 0,
-                rideType: finder.getTrackElementFromSegment({ ride: initialSegment.ride, location: forwardIterator.position, trackType: -1, rideType: -1 })?.element.rideType ?? -1
-            });
-            segments.push(newSegment);
-
-            if (newSegment.trackType == TrackElementType.BeginStation) {
-                break;
-            }
-        }
-
-        return segments;
-    }
-
     /** Update the segmentSequence state by providing a new segment to be the new selected segment. */
     public updateSegmentSequence(initialSegment: Segment | null): void {
         // this actually sets all the state values
-        const newSequence = this.createSegmentSequence(initialSegment);
-        debug(`sequence updated with ${newSequence.length} segments, with selected index ${this.selectedSegmentIndex.get()}`);
-        this.segmentSequence.set(newSequence);
+        const { sequence, indexOfInitialSegment } = createSegmentSequence(initialSegment);
+        debug(`sequence updated with ${sequence.length} segments, with selected index ${indexOfInitialSegment}`);
+        this.segmentSequence.set(sequence);
+        this.selectedSegmentIndex.set(indexOfInitialSegment);
     }
 
     /** Set the selected segment to the index provided.
@@ -165,7 +111,8 @@ class SegmentState {
         if (direction == "next") {
             // get the last value in segments, then get a TI there and get nextPosition()
             const finalSegment = segments[segments.length - 1];
-            const finalSegmentTI = finder.getTIAtSegment(finalSegment);
+            debug(`SegmentSequence.getBuildLocation: final segment is ${finalSegment?.trackType ? TrackElementType[finalSegment.trackType] : "null"}`);
+            const finalSegmentTI = finder.getTIAtSegment({ segment: finalSegment });
             if (finalSegmentTI == null) {
                 debug(`SegmentSequence.getBuildLocation ${direction}: no TI found`);
                 return null;
@@ -200,19 +147,19 @@ class SegmentModel {
     }
 }
 
-
-
-const areSegmentsEqual = (segment1: Segment, segment2: Segment): boolean => {
-    return _.isEqual(segment1.location, segment2.location) && segment1.ride == segment2.ride && segment1.trackType == segment2.trackType;
-};
-
 const checkIsCompleteCircuit = (segmentSequence: Segment[]): boolean => {
+    // debug("SegmentSequence.checkIsCompleteCircuit: checking if segment sequence is a complete circuit");
     const firstSegment = segmentSequence[0];
     const lastSegment = segmentSequence[segmentSequence.length - 1];
 
+    if (!firstSegment || !lastSegment) {
+        // debug("SegmentSequence.checkIsCompleteCircuit: first or last segment is undefined");
+        return false;
+    }
+
     const TIAtFirstSegment = finder.getTIAtSegment(firstSegment);
     if (TIAtFirstSegment == null) {
-        debug("SegmentSequence.checkIsCompleteCircuit: no TI found at first segment");
+        // debug("SegmentSequence.checkIsCompleteCircuit: no TI found at first segment");
         return false;
     }
     // check if the last segment is the same as the first segment and that they're not undefined
@@ -223,8 +170,9 @@ const checkIsCompleteCircuit = (segmentSequence: Segment[]): boolean => {
 };
 
 const getSelectedSegmentFromIndex = (segmentSequence: Segment[], selectedSegmentIndex: number): Segment | null => {
+    debug(`SegmentSequence.getSelectedSegmentFromIndex: getting selected segment from index ${selectedSegmentIndex}, segmentSequence length ${segmentSequence.length}`);
     if (selectedSegmentIndex < 0 || selectedSegmentIndex >= segmentSequence.length) {
-        debug("SegmentSequence.getSelectedSegmentFromIndex: selectedSegmentIndex out of bounds");
+        // debug(`SegmentSequence.getSelectedSegmentFromIndex: selectedSegmentIndex out of bounds`);
         return null;
     }
     return segmentSequence[selectedSegmentIndex];
@@ -232,6 +180,5 @@ const getSelectedSegmentFromIndex = (segmentSequence: Segment[], selectedSegment
 
 export {
     SegmentState,
-    SegmentModel,
-    areSegmentsEqual,
+    SegmentModel
 };
