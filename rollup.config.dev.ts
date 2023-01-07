@@ -29,14 +29,18 @@ export default <RollupOptions>{
         typescript(),
         terser({
             compress: false,
-            mangle: false,
+            mangle: {
+                properties: {
+                    regex: /^_/,
+                },
+            },
             keep_classnames: true,
             keep_fnames: true,
             format: {
+                beautify: true,
                 comments: 'all',
                 quote_style: 1,
                 wrap_iife: false,
-                preamble: '// Mod powered by https://github.com/wisnia74/openrct2-typescript-mod-template - MIT license',
             },
         }),
     ],
