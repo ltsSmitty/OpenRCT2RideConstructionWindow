@@ -1,8 +1,10 @@
-import { GlobalStateController } from './../objects/global/GlobalStateController';
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { GlobalStateController } from './../objects/global/GlobalStateController';
 
-import { compute, dropdown, groupbox, horizontal, listview, window, WindowTemplate } from "openrct2-flexui";
+import { button, compute, dropdown, groupbox, horizontal, window, WindowTemplate } from "openrct2-flexui";
 import { ElementWrapper } from '../viewmodels/elementWrapper';
+import debugComponents from './debugComponents';
+
 import { isDevelopment, pluginVersion } from "../environment";
 import { TrackElementType } from "../utilities/trackElementType";
 // import { debug } from "../utilities/logger";
@@ -31,7 +33,7 @@ if (isDevelopment) {
 
 export const trackIteratorWindow = (globalState: GlobalStateController): WindowTemplate => {
     // get all main state variable accessible.
-    const { buildDirection, segmentModel: model, buttonState } = globalState;
+    const { segmentModel: model, buttonState } = globalState;
     const { segmentState } = model;
     const { selectedSegment } = segmentState;
 
@@ -344,44 +346,31 @@ export const trackIteratorWindow = (globalState: GlobalStateController): WindowT
             }),
             // choose which segment from the selected tile
             dropdown({
-                items: compute(model.trackElementsOnSelectedTile, (elements) => elements.map(e => `Ride: ${e.element.ride}, height: ${e.element.baseHeight}, i: ${TrackElementType[<TrackElementType>e.segment?.trackType || 0]}`)),
-                onChange: (selectedIndex) => { segmentState.updateSegmentSequence(model.trackElementsOnSelectedTile.get()[selectedIndex].segment); },
+                items: compute(model.trackElementsOnSelectedTile, (elements) => elements.map(e => e ? `Ride: ${e.element.ride}, height: ${e.element.baseHeight}, i: ${TrackElementType[<TrackElementType>e.segment?.trackType || 0]}` : `Ride is null.`)),
+                onChange: (selectedIndex) => { segmentState.updateSegmentSequence(model.trackElementsOnSelectedTile.get()[selectedIndex]?.segment); },
                 selectedIndex: compute(segmentState.selectedSegment, segment => {
                     const potentialIndexOf = model.trackElementsOnSelectedTile.get().map(tei => tei.segment).indexOf(segment);
                     return (potentialIndexOf === -1 ? 0 : potentialIndexOf);
                 })
             }),
+            debugComponents.buttonPressListview(globalState),
+            debugComponents.selectedSegmentListview(globalState),
             // display stats for the selected segment
-            listview({
-                height: 100,
-                items: compute(
-                    buttonState.getButtonPressCombinationStores().curve,
-                    buttonState.getButtonPressCombinationStores().bank,
-                    buttonState.getButtonPressCombinationStores().pitch, (curve, bank, pitch) => {
 
-                        const initialBuildLocation = segmentState.getBuildLocation({ direction: buildDirection.get() });
-                        const locationString = initialBuildLocation ? `${initialBuildLocation.x}, ${initialBuildLocation.y}, ${initialBuildLocation.z}; ${initialBuildLocation.direction}` : "No location";
-                        return [
-                            `Curve: ${curve ?? "none"}`,
-                            `Bank: ${bank ?? "none"}`,
-                            `Pitch: ${pitch ?? "none"}`,
-                            `${locationString}`,
-                        ];
 
-                        // if (!segment) return ["No segment selected"];
+            // if (!segment) return ["No segment selected"];
 
-                        // const segInfo = segment.get();
-                        // return [
-                        // 	`Ride: ${segInfo.ride}`,
-                        // 	`Ride type: ${segInfo.rideType}`,
-                        // 	`Track element type:  ${getTrackElementTypeName(segInfo.trackType)}`,
-                        // 	`Location: ${segInfo.location.x}, ${segInfo.location.y}, ${segInfo.location.z}; ${segInfo.location.direction}`,
-                        // 	``,
-                        // 	`Next: ${segment.nextLocation()?.x}, ${segment.nextLocation()?.y}, ${segment.nextLocation()?.z}; ${segment.nextLocation()?.direction}`,
-                        // 	`Previous: ${segment.previousLocation()?.x}, ${segment.previousLocation()?.y}, ${segment.previousLocation()?.z}; ${segment.previousLocation()?.direction}`,
-                        // ];
-                    })
-            }),
+            // const segInfo = segment.get();
+            // return [
+            // 	`Ride: ${segInfo.ride}`,
+            // 	`Ride type: ${segInfo.rideType}`,
+            // 	`Track element type:  ${getTrackElementTypeName(segInfo.trackType)}`,
+            // 	`Location: ${segInfo.location.x}, ${segInfo.location.y}, ${segInfo.location.z}; ${segInfo.location.direction}`,
+            // 	``,
+            // 	`Next: ${segment.nextLocation()?.x}, ${segment.nextLocation()?.y}, ${segment.nextLocation()?.z}; ${segment.nextLocation()?.direction}`,
+            // 	`Previous: ${segment.previousLocation()?.x}, ${segment.previousLocation()?.y}, ${segment.previousLocation()?.z}; ${segment.previousLocation()?.direction}`,
+            // ];
+
             // // choose a new buildable segment
             // dropdown({
             // 	disabled: compute(model.buildableTrackTypes, trackTypes => { return trackTypes.length > 0 ? false : true; }),
