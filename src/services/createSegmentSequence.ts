@@ -36,7 +36,7 @@ const createRawSegmentSequence = ({ segment }: { segment: Segment }): SequenceRe
     let i = 0;
     // Loop backwards until we find a begin station or an end
     while (reverseIterator.previous() || i > 2000) {
-        debug(`Moving backwards, loop ${i}`);
+        debug(`Moving backwards, loop ${i},  TET ${TrackElementType[reverseIterator.segment?.type ?? 0]}`);
         const newSegment: Segment = new Segment({
             location: reverseIterator.position,
             ride: initialSegment.ride,
@@ -85,12 +85,18 @@ const createRawSegmentSequence = ({ segment }: { segment: Segment }): SequenceRe
     // Loop forwards until we find the same beginStation or an end
     debug(`about to start looping forwards, loop ${i}`);
     while (forwardIterator.next() && i < 200) {
-        debug(`Moving forwards, loop ${i}`);
+        debug(`Moving forwards, loop ${i}, TET ${TrackElementType[forwardIterator.segment?.type ?? 0]}`);
         const newSegment: Segment = new Segment({
             location: forwardIterator.position,
             ride: initialSegment.ride,
             trackType: forwardIterator.segment?.type ?? 0,
-            rideType: finder.getTrackElementFromSegment({ ride: initialSegment.ride, location: forwardIterator.position, trackType: -1, rideType: -1 })?.element.rideType ?? -1
+            rideType: finder.getTrackElementFromSegment(
+                {
+                    ride: initialSegment.ride,
+                    location: forwardIterator.position,
+                    trackType: -1,
+                    rideType: -1
+                })?.element.rideType ?? -1
         });
         sequence.push(newSegment);
         i++;
