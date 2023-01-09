@@ -2,22 +2,21 @@
 import { GlobalStateController } from './../global/GlobalStateController';
 import * as assertButton from "./ButtonAssertions";
 import buttonActions from './buttonActions';
-
 import { debug } from '../../utilities/logger';
-// import { ButtonsActivelyPressed } from 'src/objects/buttons/ButtonMap';
 
-export const onButtonChange = (options: {
+export const onButtonChange = (params: {
     buttonType: BuildWindowButton,
     pressState: ButtonPressOption,
     globalState: GlobalStateController,
 }): void => {
-    const { buttonType, pressState, globalState } = options;
+    const { buttonType, pressState, globalState } = params;
     // debug(`the global state is ${globalState.buildDirection.get()}`);
     const { buttonState, segmentModel, buildState } = globalState;
 
     // If curve button was updated
     if (assertButton.isCurveButton(buttonType)) {
         buttonState.updateCurve({ button: buttonType, isPressed: pressState });
+
     }
 
     // If bank button was updated

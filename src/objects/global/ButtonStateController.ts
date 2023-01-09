@@ -121,10 +121,15 @@ interface IButtonStateController {
 }
 
 export class ButtonStateController implements IButtonStateController {
-    readonly pressedButtons: AllButtonsStores = { ...allButtonsEmpty };
-    readonly enabledButtons: AllButtonsStores = { ...allButtonsEmpty };
-    readonly visibleButtons = { ...allButtonsVisibilityEmpty };
-    private readonly buttonPressCombination = { ...buttonPressCombinationEmpty };
+    // export class ButtonStateController {
+    readonly pressedButtons: AllButtonsStores = _.cloneDeep(allButtonsEmpty);
+    readonly enabledButtons: AllButtonsStores = _.cloneDeep(allButtonsEmpty);
+    readonly visibleButtons = _.cloneDeep(allButtonsVisibilityEmpty);
+    readonly buttonPressCombination = _.cloneDeep(buttonPressCombinationEmpty);
+
+    constructor() {
+        this.enabledButtons.bankLeft.subscribe((enabled) => debug(`bankLeft disabled changed to ${enabled}`, true));
+    }
 
     getButtonPressCombinationStores(): ButtonPressCombination {
         return this.buttonPressCombination;
@@ -183,7 +188,13 @@ export class ButtonStateController implements IButtonStateController {
     updateCurve = ({ button, isPressed }: { button: CurveButton, isPressed: ButtonPressOption }): void => {
         // get the old pressed curve button
         const oldPressed = this.buttonPressCombination.curve.get();
-        console.log(`oldPressed: ${oldPressed}`);
+        if (oldPressed == button) {
+            // if the old pressed button is the same as the new pressed button
+            // force the button to be pressed
+            this.buttonPressCombination.curve.set(null);  // the only way to get the store to recalculate is to set it null and then set it to the value
+            this.buttonPressCombination.curve.set(button);
+            return;
+        }
         if (oldPressed) {
             // set the old pressed button to not be pressed
             this.pressedButtons[oldPressed].set(false);
@@ -195,7 +206,11 @@ export class ButtonStateController implements IButtonStateController {
 
     updateBank = ({ button, isPressed }: { button: BankButton, isPressed: ButtonPressOption }): void => {
         const oldPressed = this.buttonPressCombination.bank.get();
-        debug(`oldPressed: ${oldPressed}`);
+        if (oldPressed == button) {
+            this.buttonPressCombination.bank.set(null);
+            this.buttonPressCombination.bank.set(button);
+            return;
+        }
         if (oldPressed) {
             // set the old pressed button to not be pressed
             this.pressedButtons[oldPressed].set(false);
@@ -206,6 +221,11 @@ export class ButtonStateController implements IButtonStateController {
 
     updatePitch = ({ button, isPressed }: { button: PitchButton, isPressed: ButtonPressOption }): void => {
         const oldPressed = this.buttonPressCombination.pitch.get();
+        if (oldPressed == button) {
+            this.buttonPressCombination.pitch.set(null);
+            this.buttonPressCombination.pitch.set(button);
+            return;
+        }
         if (oldPressed) {
             this.pressedButtons[oldPressed].set(false);
         }
@@ -227,15 +247,18 @@ export class ButtonStateController implements IButtonStateController {
         if (oldPressed) {
             this.pressedButtons[oldPressed].set(false);
         }
-        this.pressedButtons[button].set(isPressed == "pressed" ? true : false);
         this.buttonPressCombination.misc.set(button);
+        this.pressedButtons[button].set(isPressed == "pressed" ? true : false);
     };
 
+    // Detail and Controls both are arrays, so they have some different handling
     updateDetail = ({ button, isPressed }: { button: DetailButton, isPressed: ButtonPressOption }): void => {
         this.buttonPressCombination.detail[button].set(isPressed == "pressed" ? true : false);
+        this.pressedButtons[button].set(isPressed == "pressed" ? true : false);
     };
 
     updateControl = ({ button, isPressed }: { button: ControlButton, isPressed: ButtonPressOption }): void => {
         this.buttonPressCombination.controls[button].set(isPressed == "pressed" ? true : false);
+        this.pressedButtons[button].set(isPressed == "pressed" ? true : false);
     };
 }

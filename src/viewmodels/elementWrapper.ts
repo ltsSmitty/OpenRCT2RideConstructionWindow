@@ -1,6 +1,7 @@
 import { GlobalStateController } from './../objects/global/GlobalStateController';
 import { button, toggle, ButtonParams, ToggleParams, FlexiblePosition, WidgetCreator } from 'openrct2-flexui';
 import { onButtonChange } from '../objects/buttons/OnButtonChange';
+import { shouldThisBePressed } from '../objects/buttons/buttonControls/toggleIsPickedControls';
 
 // import { debug } from '../utilities/logger';
 
@@ -41,11 +42,11 @@ export class ElementWrapper {
             disabled: this._globalState.buttonState.enabledButtons[buttonType],
             visibility: this._globalState.buttonState.visibleButtons[buttonType],
             onChange: (isPressed?) => {
-                if (onChange) return onChange(isPressed); //override default behaviour
+                if (onChange) return onChange(isPressed); //override default behaviour if another is provided
 
                 return onButtonChange({ buttonType, pressState: isPressed ? "pressed" : "notPressed", globalState: this._globalState });
             },
-            isPressed: this._globalState.buttonState.pressedButtons[buttonType],
+            isPressed: shouldThisBePressed({ buttonType, globalState: this._globalState }),
             ...rest
         });
 

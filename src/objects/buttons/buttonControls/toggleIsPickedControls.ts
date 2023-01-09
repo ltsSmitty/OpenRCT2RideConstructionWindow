@@ -1,15 +1,16 @@
-import { ButtonSelectorModel } from "../../viewmodels/buttonSelectorModel"
-import { SegmentModel } from "../../viewmodels/segmentModel"
-import { BuildWindowButton } from "../buttonActions/buttonTypes";
-import * as button from '../buttonTypeChecks';
-import { compute } from "openrct2-flexui";
-import { debug } from "../../utilities/logger";
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+import { GlobalStateController } from '~/src/objects/global/GlobalStateController';
+import * as assertButton from '~/src/objects/buttons/ButtonAssertions';
+import { compute, Store } from "openrct2-flexui";
+import { debug } from '~/src/utilities/logger';
 
 export const shouldThisBePressed =
-    (buttonType: BuildWindowButton, segmentModel: SegmentModel, buttonSelectorModel: ButtonSelectorModel) => {
+    ({ buttonType, globalState }: { buttonType: BuildWindowButton, globalState: GlobalStateController }): Store<boolean> => {
+        const { buttonState } = globalState;
+        const { buttonPressCombination } = buttonState;
 
-        if (button.isBankButton(buttonType)) {
-            return compute(buttonSelectorModel.selectedBank, (b) => {
+        if (assertButton.isBankButton(buttonType)) {
+            return compute(buttonPressCombination.bank, (b) => {
                 debug(`shouldThisBePressed: bank button ${buttonType} is ${b === buttonType}`);
                 if (b === buttonType) {
                     return true;
@@ -19,8 +20,8 @@ export const shouldThisBePressed =
             });
         }
         // do the same with curve and pitch
-        if (button.isCurveButton(buttonType)) {
-            return compute(buttonSelectorModel.selectedCurve, (b) => {
+        if (assertButton.isCurveButton(buttonType)) {
+            return compute(buttonPressCombination.curve, (b) => {
                 debug(`shouldThisBePressed: curve button ${buttonType} is ${b === buttonType}`);
                 if (b === buttonType) {
                     return true;
@@ -30,8 +31,8 @@ export const shouldThisBePressed =
             });
         }
 
-        if (button.isPitchButton(buttonType)) {
-            return compute(buttonSelectorModel.selectedPitch, (b) => {
+        if (assertButton.isPitchButton(buttonType)) {
+            return compute(buttonPressCombination.pitch, (b) => {
                 debug(`shouldThisBePressed: pitch button ${buttonType} is ${b === buttonType}`);
                 if (b === buttonType) {
                     return true;
@@ -40,5 +41,5 @@ export const shouldThisBePressed =
                 }
             });
         }
-        return false;
-    }
+        return buttonState.pressedButtons[buttonType];
+    };
