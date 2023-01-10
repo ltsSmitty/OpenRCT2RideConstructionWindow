@@ -236,13 +236,13 @@ export const getSpecificTrackElement = (ride: number, coords: CoordsXYZD): Track
         }
         if (chosenTrack.length === 2) {
             if (chosenTrack[0].element.trackType === chosenTrack[1].element.trackType) {
-                debug(`there were two segments, there, but they're both the exact same track type (${TrackElementType[chosenTrack[0].element.trackType]}) – so we'll return it.`);
+                // debug(`there were two segments, there, but they're both the exact same track type (${TrackElementType[chosenTrack[0].element.trackType]}) – so we'll return it.`);
                 return chosenTrack[0];
             }
         }
 
         if (chosenTrack.length > 1) {
-            debug(`Multiple elements match z & direction. Comparing x & y to filter.`);
+            // debug(`Multiple elements match z & direction. Comparing x & y to filter.`);
             // debug(`There are multiple different overlapping elements at this tile with the same z and direction – ${chosenTrack.map(track => TrackElementType[track.element.trackType])}. Now comparing the x and y. FYI, Was looking for an element matched the coords:
             // ${JSON.stringify(coords)}`);
             // debug(`the occupied Quadrants of the elements is ${chosenTrack.map(track => track.element.occupiedQuadrants)}`);
@@ -253,16 +253,16 @@ export const getSpecificTrackElement = (ride: number, coords: CoordsXYZD): Track
                 const doesXMatch = actualX === coords.x;
                 const doesYMatch = actualY === coords.y;
                 if (doesXMatch && doesYMatch) {
-                    debug(`X and y match for element ${index}.`);
+                    // debug(`X and y match for element ${index}.`);
                     return true;
                 }
-                debug(`x and y do not match for element ${index}.`);
+                // debug(`x and y do not match for element ${index}.`);
                 return false;
             });
             chosenTrack = matchingAllCoords;
-            chosenTrack.length > 1
-                ? debug(`After comparison, there are ${chosenTrack.length} elements that match all coords. Returning the first one.`)
-                : debug(`After comparison, there is only one element that matches all coords. Returning it.`);
+            // chosenTrack.length > 1
+            // ? debug(`After comparison, there are ${chosenTrack.length} elements that match all coords. Returning the first one.`)
+            // : debug(`After comparison, there is only one element that matches all coords. Returning it.`);
         }
         return chosenTrack[0];
     }
