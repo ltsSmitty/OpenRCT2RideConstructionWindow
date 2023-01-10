@@ -12,8 +12,9 @@ const selectSegment = (globalState: GlobalStateController, isPressed: boolean): 
         buttonState.updateControl({ button: 'select', isPressed: 'pressed' });
 
         // open the picker tool
-        toggleXYZPicker(isPressed,
-            (coords) => {
+        toggleXYZPicker(
+            isPressed,
+            (coords) => { // onPick
                 // get all the track elements on the selected tile
                 const elementsOnCoords = finder.getTrackElementsFromCoords(coords);
                 trackElementsOnSelectedTile.set(elementsOnCoords);
@@ -23,9 +24,11 @@ const selectSegment = (globalState: GlobalStateController, isPressed: boolean): 
                     segmentState.updateSegmentSequence(trackElementsOnSelectedTile.get()[0].segment);
                 }
             },
-            () => {
-                debug(`selection finished`);
+            () => { // onCancel
+                // have to do this because the highlighter cancels at this stage
+                segmentModel.segmentPainter.highlightRangeUnderSegment({ segment: segmentState.selectedSegment.get() });
                 globalState.buttonState.updateControl({ button: 'select', isPressed: "notPressed" });
+                debug(`selection finished`);
             });
     }
     return globalState.segmentModel.segmentState.selectedSegment.get();

@@ -1,3 +1,4 @@
+import { SegmentPainter } from './../selectionPainter/SegmentPainter';
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 
 import { Segment } from "./Segment";
@@ -11,37 +12,24 @@ import createSegmentSequence from "~/src/services/createSegmentSequence";
 
 /** Keep track of the selected segment, the sequence it's in, and whether or not it's a complete circuit. */
 class SegmentState {
-    /**
-    * The selected sequence of segments in a row
-    */
+    /**    The selected sequence of segments in a row    */
     readonly segmentSequence: ArrayStore<Segment> = arrayStore<Segment>([]);
+    selectedIndex = 0;
 
-    /**
-     * The index in segments of the currenlty selected segment
-     */
-    readonly selectedSegmentIndex: Store<number> = store<number>(-1);
+    /**   The currently selected segment, dependant on the sequence and the selected index   */
+    readonly selectedSegment = store<Segment | null>(null);
 
-    /**
-     * The currently selected segment, dependant on the sequence and the selected index
-     */
-    readonly selectedSegment = compute(this.segmentSequence, this.selectedSegmentIndex, (sequence, index) => {
-        const newSequence = getSelectedSegmentFromIndex(sequence, index);
-        debug(`Selected segment updated to ${newSequence?.trackType ? TrackElementType[newSequence.trackType] : `null`}`);
-        return newSequence;
-    });
-
-    /**
-     *Whether the sequence of segments is a complete circuit
-     */
+    /**   Whether the sequence of segments is a complete circuit    */
     readonly isCompleteCircuit: Store<boolean> = compute(this.segmentSequence, (sequence) => checkIsCompleteCircuit(sequence));
 
     /** Update the segmentSequence state by providing a new segment to be the new selected segment. */
     public updateSegmentSequence(initialSegment: Segment | null): void {
-        // this actually sets all the state values
         const { sequence, indexOfInitialSegment } = createSegmentSequence(initialSegment);
-        debug(`sequence updated with ${sequence.length} segments, with selected index ${indexOfInitialSegment}`);
         this.segmentSequence.set(sequence);
-        this.selectedSegmentIndex.set(indexOfInitialSegment);
+        this.selectedIndex = indexOfInitialSegment;
+        this.selectedSegment.set(sequence[indexOfInitialSegment]);
+
+        debug(`sequence updated with ${sequence.length} segments, with selected index ${indexOfInitialSegment}`);
     }
 
     /** Set the selected segment to the index provided.
@@ -54,13 +42,16 @@ class SegmentState {
         if (index < 0 && this.isCompleteCircuit) {
             // don't fully wrap, just wrap to the last element
             // this also sets the selected segment
-            this.selectedSegmentIndex.set(segments.length - 1);
+            this.selectedSegment.set(segments[segments.length - 1]);
+            this.selectedIndex = segments.length - 1;
             return this.selectedSegment.get();
         }
         // see if it should wrap around forwards
         if (index >= segments.length && this.isCompleteCircuit) {
             // don't fully wrap, just wrap to the first element
-            this.selectedSegmentIndex.set(0);
+            // this also sets the selected segment
+            this.selectedSegment.set(segments[0]);
+            this.selectedIndex = 0;
             return this.selectedSegment.get();
         }
         // check for otherwise out of bound indices
@@ -69,7 +60,8 @@ class SegmentState {
             return null;
         }
         // set the new index and selected segment
-        this.selectedSegmentIndex.set(index);
+        this.selectedIndex = index;
+        this.selectedSegment.set(segments[index]);
         return this.selectedSegment.get();
     }
 
@@ -77,26 +69,26 @@ class SegmentState {
     * Check if the selectedSegment from the segment sequence state has a proceeding segment in the next direction
     */
     public hasNext(): boolean {
-        return (this.selectedSegmentIndex.get() < this.segmentSequence.get().length - 1) || this.isCompleteCircuit.get();
+        return (this.selectedIndex < this.segmentSequence.get().length - 1) || this.isCompleteCircuit.get();
     }
 
     /**
    * Check if the selectedSegment from the segment sequence state has a proceeding segment in the previous direction
    */
     public hasPrevious(): boolean {
-        return (this.selectedSegmentIndex.get() > 0) || this.isCompleteCircuit.get();
+        return (this.selectedIndex > 0) || this.isCompleteCircuit.get();
     }
 
     /** Iterate the selected segment in the direction provided. Returns true if it successfully iterates, returns false if it's unable to iterate.*/
     public iterateSelectionInDirection(direction: BuildDirection): boolean {
         if (direction === "next") {
             //return true if successful
-            debug("SegmentSequence.iterateSelectionInDirection: next");
-            return !!this.setSelectedSegment({ index: this.selectedSegmentIndex.get() + 1 });
+            // debug("SegmentSequence.iterateSelectionInDirection: next");
+            return !!this.setSelectedSegment({ index: this.selectedIndex + 1 });
         }
         // direction === "previous"
-        debug("SegmentSequence.iterateSelectionInDirection: previous");
-        return !!this.setSelectedSegment({ index: this.selectedSegmentIndex.get() - 1 });
+        // debug("SegmentSequence.iterateSelectionInDirection: previous");
+        return !!this.setSelectedSegment({ index: this.selectedIndex - 1 });
     }
     /**
      * Get the initial build location which a TI provides at the end of the segment sequence in the direction provided.
@@ -134,6 +126,7 @@ class SegmentState {
 class SegmentModel {
     private readonly globalState: GlobalStateController;
     readonly segmentState: SegmentState;
+    readonly segmentPainter: SegmentPainter;
 
 
     /** When a segment is selected, temporarily store the list of track elements here for future reference */
@@ -144,6 +137,7 @@ class SegmentModel {
         this.segmentState = new SegmentState();
         // adding this debug just to make eslint happy about globalState not being used. if it ends up never being used, feel free to delete this.
         debug(`segmentModel initialized with globalState having ${JSON.stringify(Object.keys(this.globalState).length)} keys`);
+        this.segmentPainter = new SegmentPainter(this.segmentState);
     }
 }
 
@@ -169,14 +163,14 @@ const checkIsCompleteCircuit = (segmentSequence: Segment[]): boolean => {
     return false;
 };
 
-const getSelectedSegmentFromIndex = (segmentSequence: Segment[], selectedSegmentIndex: number): Segment | null => {
-    debug(`SegmentSequence.getSelectedSegmentFromIndex: getting selected segment from index ${selectedSegmentIndex}, segmentSequence length ${segmentSequence.length}`);
-    if (selectedSegmentIndex < 0 || selectedSegmentIndex >= segmentSequence.length) {
-        // debug(`SegmentSequence.getSelectedSegmentFromIndex: selectedSegmentIndex out of bounds`);
-        return null;
-    }
-    return segmentSequence[selectedSegmentIndex];
-};
+// const getSelectedSegmentFromIndex = (segmentSequence: Segment[], selectedSegmentIndex: number): Segment | null => {
+//     debug(`SegmentSequence.getSelectedSegmentFromIndex: getting selected segment from index ${selectedSegmentIndex}, segmentSequence length ${segmentSequence.length}`);
+//     if (selectedSegmentIndex < 0 || selectedSegmentIndex >= segmentSequence.length) {
+//         // debug(`SegmentSequence.getSelectedSegmentFromIndex: selectedSegmentIndex out of bounds`);
+//         return null;
+//     }
+//     return segmentSequence[selectedSegmentIndex];
+// };
 
 export {
     SegmentState,
