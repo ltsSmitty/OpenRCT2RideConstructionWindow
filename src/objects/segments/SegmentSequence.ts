@@ -39,29 +39,38 @@ class SegmentState {
         const segments = this.segmentSequence.get();
 
         // see if it should wrap around backwards
-        if (index < 0 && this.isCompleteCircuit) {
-            // don't fully wrap, just wrap to the last element
-            // this also sets the selected segment
-            this.selectedSegment.set(segments[segments.length - 1]);
-            this.selectedIndex = segments.length - 1;
-            return this.selectedSegment.get();
+
+        if (this.isCompleteCircuit.get()) {
+            debug(`complete circuit, so open to wrapping`);
+            if (index < 0) {
+                // don't fully wrap, just wrap to the last element
+                // this also sets the selected segment
+                this.selectedSegment.set(segments[segments.length - 1]);
+                this.selectedIndex = segments.length - 1;
+                debug(`wrapped index back to ${segments.length - 1}`);
+                return this.selectedSegment.get();
+            }
+            // see if it should wrap around forwards
+            if (index >= segments.length) {
+                // don't fully wrap, just wrap to the first element
+                // this also sets the selected segment
+                this.selectedSegment.set(segments[0]);
+                this.selectedIndex = 0;
+                debug(`wrapped index back to 0`);
+                return this.selectedSegment.get();
+            }
+            this.selectedIndex = index;
+            this.selectedSegment.set(segments[index]);
+        } else {
+            // not a circuit
+            if (index < 0 || index >= segments.length) {
+                debug("SegmentSequence.setSelectedSegment: index out of bounds");
+                return null;
+            }
+            // set the new index and selected segment
+            this.selectedIndex = index;
+            this.selectedSegment.set(segments[index]);
         }
-        // see if it should wrap around forwards
-        if (index >= segments.length && this.isCompleteCircuit) {
-            // don't fully wrap, just wrap to the first element
-            // this also sets the selected segment
-            this.selectedSegment.set(segments[0]);
-            this.selectedIndex = 0;
-            return this.selectedSegment.get();
-        }
-        // check for otherwise out of bound indices
-        if (index < 0 || index >= segments.length && !this.isCompleteCircuit) {
-            debug("SegmentSequence.setSelectedSegment: index out of bounds");
-            return null;
-        }
-        // set the new index and selected segment
-        this.selectedIndex = index;
-        this.selectedSegment.set(segments[index]);
         return this.selectedSegment.get();
     }
 
@@ -82,12 +91,9 @@ class SegmentState {
     /** Iterate the selected segment in the direction provided. Returns true if it successfully iterates, returns false if it's unable to iterate.*/
     public iterateSelectionInDirection(direction: BuildDirection): boolean {
         if (direction === "next") {
-            //return true if successful
-            // debug("SegmentSequence.iterateSelectionInDirection: next");
+
             return !!this.setSelectedSegment({ index: this.selectedIndex + 1 });
         }
-        // direction === "previous"
-        // debug("SegmentSequence.iterateSelectionInDirection: previous");
         return !!this.setSelectedSegment({ index: this.selectedIndex - 1 });
     }
     /**
