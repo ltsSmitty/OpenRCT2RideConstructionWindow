@@ -1,6 +1,5 @@
-import { SegmentPainter } from './../selectionPainter/SegmentPainter';
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
-
+import { SegmentPainter } from './../selectionPainter/SegmentPainter';
 import { Segment } from "./Segment";
 import { debug } from "~/src/utilities/logger";
 import * as finder from "~/src/services/finder";
@@ -11,7 +10,9 @@ import { GlobalStateController } from "../global/GlobalStateController";
 import createSegmentSequence from "~/src/services/createSegmentSequence";
 
 /** Keep track of the selected segment, the sequence it's in, and whether or not it's a complete circuit. */
-class SegmentState {
+class
+
+    SegmentState {
     /**    The selected sequence of segments in a row    */
     readonly segmentSequence: ArrayStore<Segment> = arrayStore<Segment>([]);
     selectedIndex = 0;
@@ -22,6 +23,12 @@ class SegmentState {
     /**   Whether the sequence of segments is a complete circuit    */
     readonly isCompleteCircuit: Store<boolean> = compute(this.segmentSequence, (sequence) => checkIsCompleteCircuit(sequence));
 
+    public segmentPainter: SegmentPainter;
+
+    constructor() {
+        this.segmentPainter = new SegmentPainter(this);
+    }
+
     /** Update the segmentSequence state by providing a new segment to be the new selected segment. */
     public updateSegmentSequence(initialSegment: Segment | null): void {
         const { sequence, indexOfInitialSegment } = createSegmentSequence(initialSegment);
@@ -29,7 +36,7 @@ class SegmentState {
         this.selectedIndex = indexOfInitialSegment;
         this.selectedSegment.set(sequence[indexOfInitialSegment]);
 
-        debug(`sequence updated with ${sequence.length} segments, with selected index ${indexOfInitialSegment}`);
+        // debug(`sequence updated with ${sequence.length} segments, with selected index ${indexOfInitialSegment}`);
     }
 
     /** Set the selected segment to the index provided.
@@ -41,13 +48,13 @@ class SegmentState {
         // see if it should wrap around backwards
 
         if (this.isCompleteCircuit.get()) {
-            debug(`complete circuit, so open to wrapping`);
+            // debug(`complete circuit, so open to wrapping`);
             if (index < 0) {
                 // don't fully wrap, just wrap to the last element
                 // this also sets the selected segment
                 this.selectedSegment.set(segments[segments.length - 1]);
                 this.selectedIndex = segments.length - 1;
-                debug(`wrapped index back to ${segments.length - 1}`);
+                // debug(`wrapped index back to ${segments.length - 1}`);
                 return this.selectedSegment.get();
             }
             // see if it should wrap around forwards
@@ -56,7 +63,7 @@ class SegmentState {
                 // this also sets the selected segment
                 this.selectedSegment.set(segments[0]);
                 this.selectedIndex = 0;
-                debug(`wrapped index back to 0`);
+                // debug(`wrapped index back to 0`);
                 return this.selectedSegment.get();
             }
             this.selectedIndex = index;
@@ -132,7 +139,6 @@ class SegmentState {
 class SegmentModel {
     private readonly globalState: GlobalStateController;
     readonly segmentState: SegmentState;
-    readonly segmentPainter: SegmentPainter;
 
 
     /** When a segment is selected, temporarily store the list of track elements here for future reference */
@@ -143,7 +149,7 @@ class SegmentModel {
         this.segmentState = new SegmentState();
         // adding this debug just to make eslint happy about globalState not being used. if it ends up never being used, feel free to delete this.
         debug(`segmentModel initialized with globalState having ${JSON.stringify(Object.keys(this.globalState).length)} keys`);
-        this.segmentPainter = new SegmentPainter(this.segmentState);
+
     }
 }
 

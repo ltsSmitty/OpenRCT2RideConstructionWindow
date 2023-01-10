@@ -34,7 +34,7 @@ export const onButtonChange = (params: {
         case "iterateNext":
         case "iteratePrevious": {
             const direction = buttonType === "iterateNext" ? "next" : "previous";
-            segmentModel.segmentState.iterateSelectionInDirection(direction);
+            buttonActions.iterateSelection({ direction, globalState });
             break;
         }
 

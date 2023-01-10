@@ -1,3 +1,4 @@
+import { computeBuildLocation } from './../../services/computeBuildLocation';
 import { WidgetCreator, FlexiblePosition, listview, compute } from "openrct2-flexui";
 import { GlobalStateController } from "~/src/objects/global/GlobalStateController";
 
@@ -11,15 +12,16 @@ const buttonPressListview = (globalState: GlobalStateController): WidgetCreator<
         items: compute(
             buttonState.getButtonPressCombinationStores().curve,
             buttonState.getButtonPressCombinationStores().bank,
-            buttonState.getButtonPressCombinationStores().pitch, (curve, bank, pitch) => {
+            buttonState.getButtonPressCombinationStores().pitch,
+            globalState.buildDirection, (curve, bank, pitch, direction) => {
 
-                const initialBuildLocation = segmentState.getBuildLocation({ direction: buildDirection.get() });
+                const initialBuildLocation = segmentState.getBuildLocation({ direction });
                 const locationString = initialBuildLocation ? `${initialBuildLocation.x}, ${initialBuildLocation.y}, ${initialBuildLocation.z}; ${initialBuildLocation.direction}` : "No location";
                 return [
                     `Curve: ${curve ?? "none"}`,
                     `Bank: ${bank ?? "none"}`,
                     `Pitch: ${pitch ?? "none"}`,
-                    `${locationString}`,
+                    `Initial location: ${locationString}`
                 ];
             })
     });

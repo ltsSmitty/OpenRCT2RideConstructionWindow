@@ -60,7 +60,7 @@ const setUITileSelection = (params: { mapRange?: MapRange | null, tiles?: Coords
             debug(`Unable to highlight map range. Map range tiles are not multiples of 32`);
             return false;
         }
-        debug(`Setting ui.tileSelection.tiles to ${JSON.stringify(tiles)}`);
+        // debug(`Setting ui.tileSelection.tiles to ${JSON.stringify(tiles)}`);
         ui.tileSelection.tiles = tiles;
         return true;
     }

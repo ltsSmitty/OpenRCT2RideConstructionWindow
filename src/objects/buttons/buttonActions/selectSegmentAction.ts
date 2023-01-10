@@ -26,7 +26,7 @@ const selectSegment = (globalState: GlobalStateController, isPressed: boolean): 
             },
             () => { // onCancel
                 // have to do this because the highlighter cancels at this stage
-                segmentModel.segmentPainter.highlightRangeUnderSegment({ segment: segmentState.selectedSegment.get() });
+                segmentModel.segmentState.segmentPainter.highlightRangeUnderSegment({ segment: segmentState.selectedSegment.get() });
                 globalState.buttonState.updateControl({ button: 'select', isPressed: "notPressed" });
                 debug(`selection finished`);
             });

@@ -74,9 +74,6 @@ export class BuildStateController {
         this.ride,
         this.trackElementType,
         this.computedBuildLocation, () => {
-            // this.computedBuildLocation, (rideType, ride, trackElementType, computedBuildLocation) => {
-            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-            // console.log(`Computing finished build state with the given values: ${rideType}, ${ride}, ${trackElementType}, ${JSON.stringify(computedBuildLocation)}`);
             return this.getFinishedBuildState();
         });
 
