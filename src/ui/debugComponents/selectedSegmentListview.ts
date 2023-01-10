@@ -7,7 +7,7 @@ const selectedSegmentListview = (globalState: GlobalStateController): WidgetCrea
     const { selectedSegment } = globalState.segmentModel.segmentState;
 
     return listview({
-        height: 50,
+        height: 80,
         items: compute(selectedSegment, (segment) => {
             const trackElementTypeString = segment ? TrackElementType[segment.trackType] : "none";
             const locationString = segment?.location ? `${segment.location.x}, ${segment.location.y}, ${segment.location.z}; ${segment.location.direction}` : "No location";
@@ -17,6 +17,9 @@ const selectedSegmentListview = (globalState: GlobalStateController): WidgetCrea
                 `Ride type: ${segment?.rideType ?? "none"}`,
                 `Track element type:  ${trackElementTypeString}`,
                 `Location: ${locationString}`,
+                `Selected index: ${globalState.segmentModel.segmentState.selectedIndex ?? "none"}`,
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+                `Complete circuit: ${globalState.segmentModel.segmentState.isCompleteCircuit.get() ?? "none"}`
             ];
         })
     });

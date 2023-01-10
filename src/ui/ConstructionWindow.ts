@@ -69,6 +69,7 @@ export const trackIteratorWindow = (globalState: GlobalStateController): WindowT
                     horizontal({
                         height: buttonRowHeight,
                         content: [
+                            button({}),
                             element.toggle({
                                 buttonType: 'left1Tile',
                                 width: buttonWidthSmall,

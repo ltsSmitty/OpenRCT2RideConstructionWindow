@@ -11,7 +11,7 @@ export const shouldThisBePressed =
 
         if (assertButton.isBankButton(buttonType)) {
             return compute(buttonPressCombination.bank, (b) => {
-                debug(`shouldThisBePressed: bank button ${buttonType} is ${b === buttonType}`);
+                // debug(`shouldThisBePressed: bank button ${buttonType} is ${b === buttonType}`);
                 if (b === buttonType) {
                     return true;
                 } else {
@@ -22,7 +22,7 @@ export const shouldThisBePressed =
         // do the same with curve and pitch
         if (assertButton.isCurveButton(buttonType)) {
             return compute(buttonPressCombination.curve, (b) => {
-                debug(`shouldThisBePressed: curve button ${buttonType} is ${b === buttonType}`);
+                // debug(`shouldThisBePressed: curve button ${buttonType} is ${b === buttonType}`);
                 if (b === buttonType) {
                     return true;
                 } else {
@@ -33,7 +33,7 @@ export const shouldThisBePressed =
 
         if (assertButton.isPitchButton(buttonType)) {
             return compute(buttonPressCombination.pitch, (b) => {
-                debug(`shouldThisBePressed: pitch button ${buttonType} is ${b === buttonType}`);
+                // debug(`shouldThisBePressed: pitch button ${buttonType} is ${b === buttonType}`);
                 if (b === buttonType) {
                     return true;
                 } else {

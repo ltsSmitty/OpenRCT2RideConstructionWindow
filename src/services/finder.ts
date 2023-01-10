@@ -247,7 +247,7 @@ export const getSpecificTrackElement = (ride: number, coords: CoordsXYZD): Track
             // ${JSON.stringify(coords)}`);
             // debug(`the occupied Quadrants of the elements is ${chosenTrack.map(track => track.element.occupiedQuadrants)}`);
 
-            const matchingAllCoords = chosenTrack.filter((t, index) => {
+            const matchingAllCoords = chosenTrack.filter((t) => {
                 const actualX = t.segment?.location.x;
                 const actualY = t.segment?.location.y;
                 const doesXMatch = actualX === coords.x;
@@ -306,8 +306,8 @@ export const getTIAtSegment = ({ segment, ride, location }: { segment?: Segment 
 
 
     // debug(`Getting specific track element.`);
-    const thisSegmentIndex = getSpecificTrackElement(thisRide, thisLocation)?.index; // needed for iterator
-    if (!thisSegmentIndex) {
+    const thisSegmentIndex = getSpecificTrackElement(thisRide, thisLocation)?.index ?? null; // needed for iterator
+    if (thisSegmentIndex == null) {
         debug(`There was an issue getting the specific track element to get next segment options.`);
         return null;
     }

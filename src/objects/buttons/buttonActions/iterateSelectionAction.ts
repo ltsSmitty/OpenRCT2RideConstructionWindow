@@ -6,6 +6,6 @@ const iterateSelection = (direction: "next" | "previous", globalState: GlobalSta
     debug(`Moving toward ${direction}`);
     const actionResponse = globalState.segmentModel.segmentState.iterateSelectionInDirection(direction);
     return actionResponse;
-}
+};
 
 export default iterateSelection;
