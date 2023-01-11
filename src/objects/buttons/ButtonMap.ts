@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable prefer-const */
 import { TrackElementType } from "src/utilities/trackElementType";
-import { CurveButton, PitchButton, BankButton, SpecialButton, DetailButton, SelectionButton, MiscButton } from "./ButtonTypes";
 import { debug } from 'src/utilities/logger';
 import _ from 'lodash-es';
+import { ButtonPressCombination } from "../global/ButtonStateController";
 
 /**
  * The set of buttons which are actively pressed (excludes buttons which are pressed but which are disabled).
@@ -35,7 +36,7 @@ export const getButtonsForElement = (element: TrackElementType): SelectionButton
 };
 
 // todo actually write this out
-const getTrackElementTypesByRideType = (rideType: number): TrackElementType[] => {
+const getTrackElementTypesByRideType = (_rideType: number): TrackElementType[] => {
     // return all the TrackELementTypes
     return Object.keys(trackElementToButtonMap).map((key) => parseInt(key)) as TrackElementType[];
 };
@@ -276,24 +277,24 @@ const trackElementToButtonMap: ButtonToElementMap = {
     222: { curve: 'right5Tile', pitch: 'up25', bank: 'bankRight' }, // RightBankedQuarterTurn5TileUp25
     223: { curve: 'left5Tile', pitch: 'down25', bank: 'bankLeft' }, // LeftBankedQuarterTurn5TileDown25
     224: { curve: 'right5Tile', pitch: 'down25', bank: 'bankRight' }, // RightBankedQuarterTurn5TileDown25
-    225: { curve: 'noCurve', pitch: 'noPitch', bank: 'bankLeft' }, // Up25ToLeftBankedUp25
-    226: { curve: 'noCurve', pitch: 'noPitch', bank: 'bankRight' }, // Up25ToRightBankedUp25
-    227: { curve: 'noCurve', pitch: 'noPitch', bank: 'noBank' }, // LeftBankedUp25ToUp25
-    228: { curve: 'noCurve', pitch: 'noPitch', bank: 'noBank' }, // RightBankedUp25ToUp25
-    229: { curve: 'noCurve', pitch: 'noPitch', bank: 'bankLeft' }, // Down25ToLeftBankedDown25
-    230: { curve: 'noCurve', pitch: 'noPitch', bank: 'bankRight' }, // Down25ToRightBankedDown25
-    231: { curve: 'noCurve', pitch: 'noPitch', bank: 'noBank' }, // LeftBankedDown25ToDown25
-    232: { curve: 'noCurve', pitch: 'noPitch', bank: 'noBank' }, // RightBankedDown25ToDown25
-    233: { curve: 'noCurve', pitch: 'noPitch', bank: 'bankLeft' }, // LeftBankedFlatToLeftBankedUp25
-    234: { curve: 'noCurve', pitch: 'noPitch', bank: 'bankRight' }, // RightBankedFlatToRightBankedUp25
+    225: { curve: 'noCurve', pitch: 'up25', bank: 'bankLeft' }, // Up25ToLeftBankedUp25
+    226: { curve: 'noCurve', pitch: 'up25', bank: 'bankRight' }, // Up25ToRightBankedUp25
+    227: { curve: 'noCurve', pitch: 'up25', bank: 'noBank' }, // LeftBankedUp25ToUp25
+    228: { curve: 'noCurve', pitch: 'up25', bank: 'noBank' }, // RightBankedUp25ToUp25
+    229: { curve: 'noCurve', pitch: 'down25', bank: 'bankLeft' }, // Down25ToLeftBankedDown25
+    230: { curve: 'noCurve', pitch: 'down25', bank: 'bankRight' }, // Down25ToRightBankedDown25
+    231: { curve: 'noCurve', pitch: 'down25', bank: 'noBank' }, // LeftBankedDown25ToDown25
+    232: { curve: 'noCurve', pitch: 'down25', bank: 'noBank' }, // RightBankedDown25ToDown25
+    233: { curve: 'noCurve', pitch: 'up25', bank: 'bankLeft' }, // LeftBankedFlatToLeftBankedUp25
+    234: { curve: 'noCurve', pitch: 'up25', bank: 'bankRight' }, // RightBankedFlatToRightBankedUp25
     235: { curve: 'noCurve', pitch: 'noPitch', bank: 'bankLeft' }, // LeftBankedUp25ToLeftBankedFlat
     236: { curve: 'noCurve', pitch: 'noPitch', bank: 'bankRight' }, // RightBankedUp25ToRightBankedFlat
-    237: { curve: 'noCurve', pitch: 'noPitch', bank: 'bankLeft' }, // LeftBankedFlatToLeftBankedDown25
-    238: { curve: 'noCurve', pitch: 'noPitch', bank: 'bankRight' }, // RightBankedFlatToRightBankedDown25
-    239: { curve: 'noCurve', pitch: 'noPitch', bank: 'noBank' }, // LeftBankedDown25ToLeftBankedFlat
-    240: { curve: 'noCurve', pitch: 'noPitch', bank: 'noBank' }, // RightBankedDown25ToRightBankedFlat
-    241: { curve: 'noCurve', pitch: 'noPitch', bank: 'bankLeft' }, // FlatToLeftBankedUp25
-    242: { curve: 'noCurve', pitch: 'noPitch', bank: 'bankRight' }, // FlatToRightBankedUp25
+    237: { curve: 'noCurve', pitch: 'down25', bank: 'bankLeft' }, // LeftBankedFlatToLeftBankedDown25
+    238: { curve: 'noCurve', pitch: 'down25', bank: 'bankRight' }, // RightBankedFlatToRightBankedDown25
+    239: { curve: 'noCurve', pitch: 'noPitch', bank: 'bankLeft' }, // LeftBankedDown25ToLeftBankedFlat
+    240: { curve: 'noCurve', pitch: 'noPitch', bank: 'bankRight' }, // RightBankedDown25ToRightBankedFlat
+    241: { curve: 'noCurve', pitch: 'up25', bank: 'bankLeft' }, // FlatToLeftBankedUp25
+    242: { curve: 'noCurve', pitch: 'up25', bank: 'bankRight' }, // FlatToRightBankedUp25
     243: { curve: 'noCurve', pitch: 'noPitch', bank: 'noBank' }, // LeftBankedUp25ToFlat
     244: { curve: 'noCurve', pitch: 'noPitch', bank: 'noBank' }, // RightBankedUp25ToFlat
     245: { curve: 'noCurve', pitch: 'noPitch', bank: 'bankLeft' }, // FlatToLeftBankedDown25
@@ -345,27 +346,46 @@ const trackElementToButtonMap: ButtonToElementMap = {
  * @param availableTrackElementTypes The track elements that are available to build. This might include only the standard allowed pieces, or might include the extra pieces that are drawable but not technically allowed to be built.
  * @returns
  */
-export const getElementsFromGivenButtons = (activelyPressedButtons: ButtonsActivelyPressed, availableTrackElementTypes: TrackElementType[] = allTrackELementTypes): TrackElementType[] => {
+export const getElementsFromGivenButtons = (buttonPressCombination: ButtonPressCombination, availableTrackElementTypes: TrackElementType[] = allTrackELementTypes): TrackElementType[] => {
 
-    debug(`Searching for TrackElements that can be built with buttons: ${JSON.stringify(activelyPressedButtons)}`);
-    debug(`activelyPressedButtons: ${JSON.stringify(activelyPressedButtons, null, 2)}`);
+    const { curve: curveStore, bank: bankStore, pitch: pitchStore, detail: detailStore, misc: miscStore, special: specialStore } = buttonPressCombination;
+
+    const curve = curveStore?.get();
+    const bank = bankStore?.get();
+    const pitch = pitchStore?.get();
+    const detail = {
+        chainLift: detailStore?.chainLift?.get(),
+        covered: detailStore?.covered?.get(),
+    };
+    const misc = miscStore?.get();
+    const special = specialStore?.get();
+
+    const buttonValues = {
+        curve,
+        bank,
+        pitch,
+        detail,
+        misc,
+        special,
+    };
+
+    // debug(`activelyPressedButtons: ${JSON.stringify(buttonValues, null, 2)}`);
 
     const matchingTrackElements = availableTrackElementTypes.filter((element) => {
         const elementButtonMap = trackElementToButtonMap[element];
+        const curvesMatch = buttonValues.curve == elementButtonMap.curve;
+        const pitchesMatch = buttonValues.pitch == elementButtonMap.pitch;
+        const banksMatch = buttonValues.bank == elementButtonMap.bank;
+        const miscsMatch = buttonValues.misc == elementButtonMap.misc;
+        const specialsMatch = buttonValues.special == elementButtonMap.special;
+        // const detailsMatch = _.every(buttonValues.detail, (value, key) => value === !!_.find(elementButtonMap?.detail, key));
 
-        const curvesMatch = activelyPressedButtons.curve === elementButtonMap.curve;
-        const pitchesMatch = activelyPressedButtons.pitch === elementButtonMap.pitch;
-        const banksMatch = activelyPressedButtons.bank === elementButtonMap.bank;
-        const miscsMatch = activelyPressedButtons.misc === elementButtonMap.misc;
-        const specialsMatch = activelyPressedButtons.special === elementButtonMap.special;
-        const detailsMatch = (activelyPressedButtons.detail?.length == 0 && elementButtonMap.detail?.length == 0) ||
-            activelyPressedButtons.detail?.every((detail, index) => (elementButtonMap.detail && detail === elementButtonMap.detail[index]));
-
-
-        return curvesMatch && pitchesMatch && banksMatch && miscsMatch && specialsMatch && detailsMatch;
+        // return curvesMatch && pitchesMatch && banksMatch && miscsMatch && specialsMatch && detailsMatch;
+        return curvesMatch && pitchesMatch && banksMatch && miscsMatch && specialsMatch;
     });
 
-    debug(`matchingTrackElements: ${JSON.stringify(matchingTrackElements, null, 2)}`)
+    debug(`matchingTrackElements:`);
+    matchingTrackElements.forEach((element) => { debug(`     ${TrackElementType[element]}`); });
     return matchingTrackElements;
 };
 
